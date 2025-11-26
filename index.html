@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MUVN - Acceso Seguro</title>
+    <title>MUVN - Gestión Integral</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -12,26 +12,35 @@
             theme: {
                 extend: {
                     colors: {
-                        muvnBlue: '#0DA4BF',
+                        muvnTeal: '#0AB2BB',
                         muvnDark: '#0E0E0E', 
                     }
                 }
             }
         }
     </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .custom-input { display: block; width: 100%; padding: 0.75rem; background-color: white; border: 1px solid #d1d5db; border-radius: 0.75rem; color: #374151; font-weight: 600; transition: all 0.15s ease-in-out; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); appearance: none; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/babel-standalone@6/babel.min.js"></script> 
+    
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-    
-    </head>
+</head>
 <body class="bg-slate-900 text-slate-100 min-h-screen">
 
     <div id="root">
         <div style="height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; color: #0AB2BB;">
             <h2 style="font-size: 24px; font-weight: bold;">Cargando MUVN...</h2>
-            <p style="color: #64748b;">Si esto tarda más de 5 segundos, revisa tu conexión.</p>
+            <p style="color: #64748b;">Esto debería cargar en segundos. Si no, revisa la Consola (F12).</p>
         </div>
     </div>
 
@@ -39,20 +48,21 @@
         window.onerror = function(message, source, lineno, colno, error) {
             document.getElementById('root').innerHTML = `
                 <div style="padding: 20px; color: #ff6b6b; background: #1a202c; height: 100vh;">
-                    <h1 style="font-size: 24px; margin-bottom: 10px;">⚠️ Ocurrió un error</h1>
+                    <h1 style="font-size: 24px; margin-bottom: 10px;">⚠️ ¡ERROR CRÍTICO!</h1>
+                    <p>La aplicación falló al iniciarse. Esto es un error de código o configuración.</p>
                     <p><strong>Mensaje:</strong> ${message}</p>
                     <p><strong>Línea:</strong> ${lineno}</p>
-                    <p style="margin-top: 20px; color: #94a3b8;">Por favor, envía una captura de esta pantalla al desarrollador.</p>
+                    <p style="margin-top: 20px; color: #94a3b8;">Revisa que las reglas de Firebase estén en "allow read, write: if true;"</p>
                 </div>
             `;
         };
     </script>
 
-    <script type="text/babel">
+    <script>
         // ---------------------------------------------------------
         // 1. CONFIGURACIÓN FIREBASE
         // ---------------------------------------------------------
-        const firebaseConfig = {
+        var firebaseConfig = {
             apiKey: "AIzaSyDmf2tlJYR7cP_vxv66tVozQDBFehURGXM",
             authDomain: "data-d064b.firebaseapp.com",
             projectId: "data-d064b",
@@ -73,7 +83,7 @@
         // ---------------------------------------------------------
         // 2. DATOS
         // ---------------------------------------------------------
-        const STAFF = [
+        var STAFF = [
             { name: "Mario Ulises Vallejo Navarrete", pin: "0000", role: "admin" }, 
             { name: "Ana Martínez", pin: "1111", role: "caregiver" },
             { name: "Carlos Velázquez", pin: "2222", role: "caregiver" },
@@ -93,7 +103,7 @@
             { name: "Pablo Estévez", pin: "1234", role: "caregiver" }
         ];
 
-        const PATIENTS = [
+        var PATIENTS = [
             { id: 'p1', name: "Don Roberto", condition: "Diabetes T2 / Hipertensión", info: { address: "Calle Roble #123", emergency: "Hijo: Luis", age: "78", weight: "82kg", bloodType: "O+", allergies: "Penicilina", doctor: "Dr. Gtz", diet: "Diabética" }, tasks: { dia: [{id:'p1d1', text:'Glucosa', type:'vital'}, {id:'p1d2', text:'Desayuno', type:'food'}], noche: [{id:'p1n1', text:'Cena', type:'food'}, {id:'p1n2', text:'Glucosa', type:'vital'}] } },
             { id: 'p2', name: "Sra. Elena", condition: "Post-Op Cadera", info: { address: "Av. Morelos #45", emergency: "Hija: Clara", age: "84", weight: "60kg", bloodType: "A-", allergies: "Ninguna", doctor: "Dra. Salas", diet: "Alta fibra" }, tasks: { dia: [{id:'p2d1', text:'Nebulización', type:'med'}, {id:'p2d2', text:'Curación', type:'cure'}], noche: [{id:'p2n1', text:'Oxígeno', type:'med'}] } },
             { id: 'p3', name: "Don Jorge", condition: "Parkinson", info: { address: "Calle Madero #88", emergency: "Esposa: Rosa", age: "75", weight: "70kg", bloodType: "B+", allergies: "Sulfa", doctor: "Dr. Neuro", diet: "Papilla" }, tasks: { dia: [{id:'p3d1', text:'Levodopa', type:'med'}], noche: [{id:'p3n1', text:'Levodopa', type:'med'}] } },
@@ -111,43 +121,86 @@
         // ---------------------------------------------------------
         // 3. HELPERS
         // ---------------------------------------------------------
-        const Icons = {
-            Lock: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>,
-            User: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>,
-            Back: () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
+        var Icons = {
+            Lock: function Lock() {
+                return /*#__PURE__*/React.createElement("svg", {
+                    className: "w-5 h-5",
+                    fill: "none",
+                    stroke: "currentColor",
+                    viewBox: "0 0 24 24"
+                }, /*#__PURE__*/React.createElement("rect", {
+                    x: "3",
+                    y: "11",
+                    width: "18",
+                    height: "11",
+                    rx: "2",
+                    ry: "2"
+                }), /*#__PURE__*/React.createElement("path", {
+                    d: "M7 11V7a5 5 0 0 1 10 0v4"
+                }));
+            },
+            User: function User() {
+                return /*#__PURE__*/React.createElement("svg", {
+                    className: "w-5 h-5",
+                    fill: "none",
+                    stroke: "currentColor",
+                    viewBox: "0 0 24 24"
+                }, /*#__PURE__*/React.createElement("path", {
+                    d: "M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"
+                }), /*#__PURE__*/React.createElement("circle", {
+                    cx: "12",
+                    cy: "7",
+                    r: "4"
+                }));
+            },
+            Back: function Back() {
+                return /*#__PURE__*/React.createElement("svg", {
+                    className: "w-6 h-6",
+                    fill: "none",
+                    stroke: "currentColor",
+                    viewBox: "0 0 24 24"
+                }, /*#__PURE__*/React.createElement("path", {
+                    strokeLinecap: "round",
+                    strokeLinejoin: "round",
+                    strokeWidth: "2",
+                    d: "M15 19l-7-7 7-7"
+                }));
+            }
         };
 
-        const getTodayStr = () => new Date().toISOString().split('T')[0];
-        
-        const getCalendarRange = () => {
-            const dates = [];
-            const today = new Date();
-            for (let i = -15; i <= 15; i++) {
-                const d = new Date(today);
+        var getTodayStr = function getTodayStr() {
+            return new Date().toISOString().split('T')[0];
+        };
+
+        var getCalendarRange = function getCalendarRange() {
+            var dates = [];
+            var today = new Date();
+            for (var i = -15; i <= 15; i++) {
+                var d = new Date(today);
                 d.setDate(today.getDate() + i);
                 dates.push(d.toISOString().split('T')[0]);
             }
             return dates;
         };
 
-        const isEditable = (dateStr, shift) => {
-            const now = new Date();
-            const recordDate = new Date(dateStr + "T12:00:00");
-            const today = new Date(getTodayStr() + "T12:00:00");
+        var isEditable = function isEditable(dateStr, shift) {
+            var now = new Date();
+            var recordDate = new Date(dateStr + "T12:00:00");
+            var today = new Date(getTodayStr() + "T12:00:00");
 
             if (recordDate > today) return false;
-            
+
             if (recordDate < today) {
-                const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
-                // Comparar solo fechas (sin hora)
-                const isYesterday = recordDate.toISOString().split('T')[0] === yesterday.toISOString().split('T')[0];
+                var yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
+                var isYesterday = recordDate.toISOString().split('T')[0] === yesterday.toISOString().split('T')[0];
                 if (isYesterday && shift === 'noche' && now.getHours() < 9) return true;
                 return false;
             }
 
-            const currentHour = now.getHours();
-            if (shift === 'dia') return currentHour < 21; 
-            if (shift === 'noche') return true; 
+            var currentHour = now.getHours();
+            if (shift === 'dia') return currentHour < 21;
+            if (shift === 'noche') return true;
             return false;
         };
 
@@ -155,347 +208,610 @@
         // 4. COMPONENTES
         // ---------------------------------------------------------
 
-        function LoginScreen({ onLogin }) {
-            const [selectedUser, setSelectedUser] = React.useState("");
-            const [pin, setPin] = React.useState("");
-            const [error, setError] = React.useState("");
-            
-            const handleAttempt = (e) => {
+        function LoginScreen(_ref) {
+            var onLogin = _ref.onLogin;
+
+            var _React$useState = React.useState(""),
+                selectedUser = _React$useState[0],
+                setSelectedUser = _React$useState[1];
+
+            var _React$useState2 = React.useState(""),
+                pin = _React$useState2[0],
+                setPin = _React$useState2[1];
+
+            var _React$useState3 = React.useState(""),
+                error = _React$useState3[0],
+                setError = _React$useState3[1];
+
+            var handleAttempt = function handleAttempt(e) {
                 e.preventDefault();
-                const user = STAFF.find(c => c.name === selectedUser);
+                var user = STAFF.find(function(c) {
+                    return c.name === selectedUser;
+                });
                 if (user && user.pin === pin) onLogin(user);
-                else { setError("PIN Incorrecto"); setPin(""); }
+                else {
+                    setError("PIN Incorrecto");
+                    setPin("");
+                }
             };
 
             return (
-                <div className="flex flex-col items-center justify-center min-h-screen px-4 bg-slate-900">
-                    <div className="bg-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-sm text-center border border-slate-700 mx-auto fade-in">
-                        <div className="mx-auto w-32 h-32 rounded-full flex items-center justify-center mb-6 overflow-hidden bg-[#0E0E0E] p-1 border-4 border-[#0AB2BB]">
-                            <img src="https://raw.githubusercontent.com/jesusvn1993mplvt3-ai/MUVN-JMVN/main/LOGO%20MUVN.jpg" alt="Logo" className="w-full h-full object-contain" />
-                        </div>
-                        <h2 className="text-2xl font-bold text-white mb-1">MUVN 2.0</h2>
-                        <p className="text-sm text-slate-400 mb-8">Administración y Cuidados</p>
-                        <form onSubmit={handleAttempt} className="space-y-6">
-                            <div className="text-left">
-                                <label className="block text-xs font-bold text-slate-300 uppercase mb-2 ml-1">Usuario</label>
-                                <select className="custom-input text-sm" value={selectedUser} onChange={(e) => {setSelectedUser(e.target.value); setError("");}}>
-                                    <option value="">-- Seleccionar --</option>
-                                    {STAFF.map(c => <option key={c.pin} value={c.name}>{c.name} {c.role === 'admin' ? '(Admin)' : ''}</option>)}
-                                </select>
-                            </div>
-                            {selectedUser && (
-                                <div className="text-left fade-in">
-                                    <label className="block text-xs font-bold text-slate-300 uppercase mb-2 ml-1">PIN</label>
-                                    <div className="relative">
-                                        <div className="absolute left-3 top-3 text-gray-400"><Icons.Lock /></div>
-                                        <input type="password" maxLength="4" className="custom-input pl-10 text-center text-xl font-bold tracking-widest" value={pin} onChange={(e) => setPin(e.target.value)} placeholder="••••"/>
-                                    </div>
-                                    {error && <p className="text-red-400 text-xs mt-2 text-center font-bold">{error}</p>}
-                                </div>
-                            )}
-                            <button disabled={!selectedUser || pin.length < 4} className="w-full bg-[#0AB2BB] hover:bg-[#089aa1] text-white font-bold py-4 rounded-xl shadow-lg disabled:opacity-50 transition-all mt-4">Ingresar</button>
-                        </form>
-                    </div>
-                </div>
-            );
+                /*#__PURE__*/
+                React.createElement("div", {
+                    className: "flex flex-col items-center justify-center min-h-screen px-4 bg-slate-900"
+                }, /*#__PURE__*/
+                React.createElement("div", {
+                    className: "bg-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-sm text-center border border-slate-700 mx-auto fade-in"
+                }, /*#__PURE__*/
+                React.createElement("div", {
+                    className: "mx-auto w-32 h-32 rounded-full flex items-center justify-center mb-6 overflow-hidden bg-[#0E0E0E] p-1 border-4 border-[#0AB2BB]"
+                }, /*#__PURE__*/
+                React.createElement("img", {
+                    src: "https://raw.githubusercontent.com/jesusvn1993mplvt3-ai/MUVN-JMVN/main/LOGO%20MUVN.jpg",
+                    alt: "Logo",
+                    className: "w-full h-full object-contain"
+                })), /*#__PURE__*/
+                React.createElement("h2", {
+                    className: "text-2xl font-bold text-white mb-1"
+                }, "MUVN 2.0"), /*#__PURE__*/
+                React.createElement("p", {
+                    className: "text-sm text-slate-400 mb-8"
+                }, "Administraci\xF3n y Cuidados"), /*#__PURE__*/
+                React.createElement("form", {
+                    onSubmit: handleAttempt,
+                    className: "space-y-6"
+                }, /*#__PURE__*/
+                React.createElement("div", {
+                    className: "text-left"
+                }, /*#__PURE__*/
+                React.createElement("label", {
+                    className: "block text-xs font-bold text-slate-300 uppercase mb-2 ml-1"
+                }, "Usuario"), /*#__PURE__*/
+                React.createElement("select", {
+                    className: "custom-input text-sm",
+                    value: selectedUser,
+                    onChange: function onChange(e) {
+                        setSelectedUser(e.target.value);
+                        setError("");
+                    }
+                }, /*#__PURE__*/
+                React.createElement("option", {
+                    value: ""
+                }, "-- Seleccionar --"), STAFF.map(function(c) {
+                    return /*#__PURE__*/React.createElement("option", {
+                        key: c.pin,
+                        value: c.name
+                    }, c.name, " ", c.role === 'admin' ? '(Admin)' : '');
+                }))), selectedUser && /*#__PURE__*/
+                React.createElement("div", {
+                    className: "text-left fade-in"
+                }, /*#__PURE__*/
+                React.createElement("label", {
+                    className: "block text-xs font-bold text-slate-300 uppercase mb-2 ml-1"
+                }, "PIN"), /*#__PURE__*/
+                React.createElement("div", {
+                    className: "relative"
+                }, /*#__PURE__*/
+                React.createElement("div", {
+                    className: "absolute left-3 top-3 text-gray-400"
+                }, /*#__PURE__*/
+                React.createElement(Icons.Lock, null)), /*#__PURE__*/
+                React.createElement("input", {
+                    type: "password",
+                    maxLength: "4",
+                    className: "custom-input pl-10 text-center text-xl font-bold tracking-widest",
+                    value: pin,
+                    onChange: function onChange(e) {
+                        return setPin(e.target.value);
+                    },
+                    placeholder: "\u2022\u2022\u2022\u2022"
+                })), error && /*#__PURE__*/
+                React.createElement("p", {
+                    className: "text-red-400 text-xs mt-2 text-center font-bold"
+                }, error)), /*#__PURE__*/
+                React.createElement("button", {
+                    disabled: !selectedUser || pin.length < 4,
+                    className: "w-full bg-[#0AB2BB] hover:bg-[#089aa1] text-white font-bold py-4 rounded-xl shadow-lg disabled:opacity-50 transition-all mt-4"
+                }, "Ingresar")))));
         }
 
-        function AdminPanel({ user, onLogout }) {
-            const [selectedDate, setSelectedDate] = React.useState(getTodayStr());
-            const [assignments, setAssignments] = React.useState({});
-            const [loading, setLoading] = React.useState(false);
+        function AdminPanel(_ref2) {
+            var user = _ref2.user,
+                onLogout = _ref2.onLogout;
 
-            React.useEffect(() => {
+            var _React$useState4 = React.useState(getTodayStr()),
+                selectedDate = _React$useState4[0],
+                setSelectedDate = _React$useState4[1];
+
+            var _React$useState5 = React.useState({}),
+                assignments = _React$useState5[0],
+                setAssignments = _React$useState5[1];
+
+            var _React$useState6 = React.useState(false),
+                loading = _React$useState6[0],
+                setLoading = _React$useState6[1];
+
+            React.useEffect(function() {
                 setLoading(true);
-                const unsubscribe = db.collection("asignaciones").doc(selectedDate)
-                    .onSnapshot(doc => {
-                        if(doc.exists) setAssignments(doc.data());
-                        else setAssignments({});
-                        setLoading(false);
-                    });
-                return () => unsubscribe();
+                var unsubscribe = db.collection("asignaciones").doc(selectedDate).onSnapshot(function(doc) {
+                    if (doc.exists) setAssignments(doc.data());
+                    else setAssignments({});
+                    setLoading(false);
+                });
+                return function() {
+                    return unsubscribe();
+                };
             }, [selectedDate]);
 
-            const handleAssign = async (caregiverName, patientId, shift) => {
-                const newAssignments = { ...assignments, [caregiverName]: { patientId, shift } };
+            var handleAssign = function handleAssign(caregiverName, patientId, shift) {
+                var newAssignments = Object.assign(Object.assign({}, assignments), {}, {
+                    [caregiverName]: {
+                        patientId: patientId,
+                        shift: shift
+                    }
+                });
                 if (patientId === "off") delete newAssignments[caregiverName];
-                await db.collection("asignaciones").doc(selectedDate).set(newAssignments);
+                db.collection("asignaciones").doc(selectedDate).set(newAssignments);
             };
 
             return (
-                <div className="min-h-screen bg-slate-900 pb-20 fade-in">
-                    <header className="bg-slate-800 p-4 border-b border-slate-700 flex justify-between items-center sticky top-0 z-10">
-                        <h1 className="text-white font-bold text-lg"><span className="text-[#0AB2BB]">MUVN</span> Admin</h1>
-                        <button onClick={onLogout} className="text-slate-400 hover:text-white text-sm">Salir</button>
-                    </header>
-
-                    <div className="p-4 max-w-4xl mx-auto">
-                        <div className="bg-slate-800 p-4 rounded-xl mb-6 border border-slate-700 sticky top-20 z-10 shadow-lg">
-                            <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Fecha a Gestionar</label>
-                            <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="custom-input bg-white text-center font-bold text-lg"/>
-                            {loading && <p className="text-center text-[#0AB2BB] text-xs mt-2">Cargando datos...</p>}
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {STAFF.filter(u => u.role === 'caregiver').map(caregiver => {
-                                const assignment = assignments[caregiver.name] || { patientId: "", shift: "" };
-                                return (
-                                    <div key={caregiver.pin} className="bg-slate-800 p-4 rounded-xl border border-slate-700 flex flex-col gap-3">
-                                        <div className="flex items-center gap-2 border-b border-slate-700 pb-2">
-                                            <div className="bg-[#0AB2BB] w-8 h-8 rounded-full flex items-center justify-center font-bold text-white uppercase text-xs">
-                                                {caregiver.name.slice(0,2)}
-                                            </div>
-                                            <span className="font-bold text-white text-sm">{caregiver.name}</span>
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <div>
-                                                <label className="text-[10px] text-slate-400 uppercase">Paciente</label>
-                                                <select 
-                                                    className="w-full bg-slate-700 text-white p-2 rounded text-sm outline-none focus:ring-1 focus:ring-[#0AB2BB]"
-                                                    value={assignment.patientId || ""}
-                                                    onChange={(e) => handleAssign(caregiver.name, e.target.value, assignment.shift || 'dia')}
-                                                >
-                                                    <option value="">-- Sin Asignar --</option>
-                                                    <option value="off">💤 DESCANSO</option>
-                                                    {PATIENTS.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                                                </select>
-                                            </div>
-                                            <div>
-                                                <label className="text-[10px] text-slate-400 uppercase">Turno</label>
-                                                <select 
-                                                    className="w-full bg-slate-700 text-white p-2 rounded text-sm outline-none focus:ring-1 focus:ring-[#0AB2BB]"
-                                                    value={assignment.shift || ""}
-                                                    onChange={(e) => handleAssign(caregiver.name, assignment.patientId, e.target.value)}
-                                                    disabled={!assignment.patientId || assignment.patientId === 'off'}
-                                                >
-                                                    <option value="dia">☀️ Día</option>
-                                                    <option value="noche">🌙 Noche</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                </div>
-            );
+                /*#__PURE__*/
+                React.createElement("div", {
+                    className: "min-h-screen bg-slate-900 pb-20 fade-in"
+                }, /*#__PURE__*/
+                React.createElement("header", {
+                    className: "bg-slate-800 p-4 border-b border-slate-700 flex justify-between items-center sticky top-0 z-10"
+                }, /*#__PURE__*/
+                React.createElement("h1", {
+                    className: "text-white font-bold text-lg"
+                }, /*#__PURE__*/
+                React.createElement("span", {
+                    className: "text-[#0AB2BB]"
+                }, "MUVN"), " Admin"), /*#__PURE__*/
+                React.createElement("button", {
+                    onClick: onLogout,
+                    className: "text-slate-400 hover:text-white text-sm"
+                }, "Salir")), /*#__PURE__*/
+                React.createElement("div", {
+                    className: "p-4 max-w-4xl mx-auto"
+                }, /*#__PURE__*/
+                React.createElement("div", {
+                    className: "bg-slate-800 p-4 rounded-xl mb-6 border border-slate-700 sticky top-20 z-10 shadow-lg"
+                }, /*#__PURE__*/
+                React.createElement("label", {
+                    className: "block text-xs font-bold text-slate-400 uppercase mb-2"
+                }, "Fecha a Gestionar"), /*#__PURE__*/
+                React.createElement("input", {
+                    type: "date",
+                    value: selectedDate,
+                    onChange: function onChange(e) {
+                        return setSelectedDate(e.target.value);
+                    },
+                    className: "custom-input bg-white text-center font-bold text-lg"
+                }), loading && /*#__PURE__*/
+                React.createElement("p", {
+                    className: "text-center text-[#0AB2BB] text-xs mt-2"
+                }, "Cargando datos...")), /*#__PURE__*/
+                React.createElement("div", {
+                    className: "grid grid-cols-1 md:grid-cols-2 gap-4"
+                }, STAFF.filter(function(u) {
+                    return u.role === 'caregiver';
+                }).map(function(caregiver) {
+                    var assignment = assignments[caregiver.name] || {
+                        patientId: "",
+                        shift: ""
+                    };
+                    return (
+                        /*#__PURE__*/
+                        React.createElement("div", {
+                            key: caregiver.pin,
+                            className: "bg-slate-800 p-4 rounded-xl border border-slate-700 flex flex-col gap-3"
+                        }, /*#__PURE__*/
+                        React.createElement("div", {
+                            className: "flex items-center gap-2 border-b border-slate-700 pb-2"
+                        }, /*#__PURE__*/
+                        React.createElement("div", {
+                            className: "bg-[#0AB2BB] w-8 h-8 rounded-full flex items-center justify-center font-bold text-white uppercase text-xs"
+                        }, caregiver.name.slice(0, 2)), /*#__PURE__*/
+                        React.createElement("span", {
+                            className: "font-bold text-white text-sm"
+                        }, caregiver.name)), /*#__PURE__*/
+                        React.createElement("div", {
+                            className: "grid grid-cols-2 gap-2"
+                        }, /*#__PURE__*/
+                        React.createElement("div", null, /*#__PURE__*/
+                        React.createElement("label", {
+                            className: "text-[10px] text-slate-400 uppercase"
+                        }, "Paciente"), /*#__PURE__*/
+                        React.createElement("select", {
+                            className: "w-full bg-slate-700 text-white p-2 rounded text-sm outline-none focus:ring-1 focus:ring-[#0AB2BB]",
+                            value: assignment.patientId || "",
+                            onChange: function onChange(e) {
+                                return handleAssign(caregiver.name, e.target.value, assignment.shift || 'dia');
+                            }
+                        }, /*#__PURE__*/
+                        React.createElement("option", {
+                            value: ""
+                        }, "-- Sin Asignar --"), /*#__PURE__*/
+                        React.createElement("option", {
+                            value: "off"
+                        }, "\uD83D\uDCA4 DESCANSO"), PATIENTS.map(function(p) {
+                            return /*#__PURE__*/React.createElement("option", {
+                                key: p.id,
+                                value: p.id
+                            }, p.name);
+                        })), /*#__PURE__*/
+                        React.createElement("div", null, /*#__PURE__*/
+                        React.createElement("label", {
+                            className: "text-[10px] text-slate-400 uppercase"
+                        }, "Turno"), /*#__PURE__*/
+                        React.createElement("select", {
+                            className: "w-full bg-slate-700 text-white p-2 rounded text-sm outline-none focus:ring-1 focus:ring-[#0AB2BB]",
+                            value: assignment.shift || "",
+                            onChange: function onChange(e) {
+                                return handleAssign(caregiver.name, assignment.patientId, e.target.value);
+                            },
+                            disabled: !assignment.patientId || assignment.patientId === 'off'
+                        }, /*#__PURE__*/
+                        React.createElement("option", {
+                            value: "dia"
+                        }, "\u2600\uFE0F D\xEDa"), /*#__PURE__*/
+                        React.createElement("option", {
+                            value: "noche"
+                        }, "\uD83C\uDF19 Noche"))))));
+                })))));
         }
 
-        function CaregiverCalendar({ user, onLogout, onSelectShift }) {
-            const [dates] = React.useState(getCalendarRange());
-            const [myAssignments, setMyAssignments] = React.useState({});
-            const [loading, setLoading] = React.useState(true);
+        function CaregiverCalendar(_ref3) {
+            var user = _ref3.user,
+                onLogout = _ref3.onLogout,
+                onSelectShift = _ref3.onSelectShift;
 
-            React.useEffect(() => {
-                // Escuchar toda la colección 'asignaciones' (Para MVP, esto carga todo. En prod usar rangos).
-                const unsubscribe = db.collection("asignaciones")
-                    .onSnapshot(snapshot => {
-                        const data = {};
-                        snapshot.docs.forEach(doc => {
-                            const dayAssignments = doc.data();
-                            if (dayAssignments[user.name]) {
-                                data[doc.id] = dayAssignments[user.name];
-                            }
-                        });
-                        setMyAssignments(data);
-                        setLoading(false);
+            var _React$useState7 = React.useState(getCalendarRange()),
+                dates = _React$useState7[0];
+
+            var _React$useState8 = React.useState({}),
+                myAssignments = _React$useState8[0],
+                setMyAssignments = _React$useState8[1];
+
+            var _React$useState9 = React.useState(true),
+                loading = _React$useState9[0],
+                setLoading = _React$useState9[1];
+
+            React.useEffect(function() {
+                var unsubscribe = db.collection("asignaciones").onSnapshot(function(snapshot) {
+                    var data = {};
+                    snapshot.docs.forEach(function(doc) {
+                        var dayAssignments = doc.data();
+                        if (dayAssignments[user.name]) {
+                            data[doc.id] = dayAssignments[user.name];
+                        }
                     });
-                return () => unsubscribe();
+                    setMyAssignments(data);
+                    setLoading(false);
+                });
+                return function() {
+                    return unsubscribe();
+                };
             }, []);
 
             return (
-                <div className="min-h-screen bg-slate-900 pb-10 fade-in">
-                    <header className="bg-slate-800 p-4 border-b border-slate-700 flex justify-between items-center sticky top-0 z-10 shadow-md">
-                        <div>
-                            <h1 className="text-white font-bold">Hola, {user.name.split(' ')[0]}</h1>
-                            <p className="text-xs text-slate-400">Tu Calendario de Turnos</p>
-                        </div>
-                        <button onClick={onLogout} className="p-2 bg-slate-700 rounded-full text-white"><Icons.User/></button>
-                    </header>
+                /*#__PURE__*/
+                React.createElement("div", {
+                    className: "min-h-screen bg-slate-900 pb-10 fade-in"
+                }, /*#__PURE__*/
+                React.createElement("header", {
+                    className: "bg-slate-800 p-4 border-b border-slate-700 flex justify-between items-center sticky top-0 z-10 shadow-md"
+                }, /*#__PURE__*/
+                React.createElement("div", null, /*#__PURE__*/
+                React.createElement("h1", {
+                    className: "text-white font-bold"
+                }, "Hola, ", user.name.split(' ')[0]), /*#__PURE__*/
+                React.createElement("p", {
+                    className: "text-xs text-slate-400"
+                }, "Tu Calendario de Turnos")), /*#__PURE__*/
+                React.createElement("button", {
+                    onClick: onLogout,
+                    className: "p-2 bg-slate-700 rounded-full text-white"
+                }, /*#__PURE__*/
+                React.createElement(Icons.User, null))), /*#__PURE__*/
+                React.createElement("div", {
+                    className: "p-4"
+                }, loading ? /*#__PURE__*/
+                React.createElement("p", {
+                    className: "text-center text-[#0AB2BB] mt-10"
+                }, "Cargando agenda...") : /*#__PURE__*/
+                React.createElement("div", {
+                    className: "space-y-3"
+                }, dates.map(function(date) {
+                    var assignment = myAssignments[date];
+                    var isToday = date === getTodayStr();
+                    var patient = assignment ? PATIENTS.find(function(p) {
+                        return p.id === assignment.patientId;
+                    }) : null;
 
-                    <div className="p-4">
-                        {loading ? <p className="text-center text-[#0AB2BB] mt-10">Cargando agenda...</p> : (
-                            <div className="space-y-3">
-                                {dates.map(date => {
-                                    const assignment = myAssignments[date];
-                                    const isToday = date === getTodayStr();
-                                    const patient = assignment ? PATIENTS.find(p => p.id === assignment.patientId) : null;
-                                    
-                                    let cardClass = "bg-slate-800 border-slate-700 opacity-50"; 
-                                    if (assignment) {
-                                        if (isToday) cardClass = "bg-[#0AB2BB] border-[#0AB2BB] text-white shadow-lg scale-[1.02] border-2";
-                                        else cardClass = "bg-slate-800 border-slate-600 text-slate-300 hover:border-[#0AB2BB]";
-                                    }
+                    var cardClass = "bg-slate-800 border-slate-700 opacity-50";
+                    if (assignment) {
+                        if (isToday) cardClass = "bg-[#0AB2BB] border-[#0AB2BB] text-white shadow-lg scale-[1.02] border-2";
+                        else cardClass = "bg-slate-800 border-slate-600 text-slate-300 hover:border-[#0AB2BB]";
+                    }
 
-                                    return (
-                                        <div 
-                                            key={date} 
-                                            onClick={() => assignment && onSelectShift(date, assignment)}
-                                            className={`p-4 rounded-xl border flex items-center justify-between transition-all ${cardClass} ${!assignment ? 'cursor-default' : 'cursor-pointer'}`}
-                                        >
-                                            <div className="flex flex-col items-center justify-center w-12 border-r border-white/10 pr-4 mr-4">
-                                                <span className="text-xs uppercase font-bold opacity-70">{new Date(date).toLocaleDateString('es-ES', {weekday: 'short'})}</span>
-                                                <span className="text-xl font-bold">{date.split('-')[2]}</span>
-                                            </div>
-                                            
-                                            <div className="flex-1">
-                                                {assignment ? (
-                                                    <>
-                                                        <div className="font-bold text-lg">{patient ? patient.name : 'Paciente desconocido'}</div>
-                                                        <div className="text-sm opacity-90 flex items-center gap-2">
-                                                            <span>{assignment.shift === 'dia' ? '☀️ Turno Día' : '🌙 Turno Noche'}</span>
-                                                        </div>
-                                                    </>
-                                                ) : (
-                                                    <span className="text-sm italic opacity-50">Sin asignación / Descanso</span>
-                                                )}
-                                            </div>
-                                            
-                                            {assignment && <div className="text-2xl opacity-50">➜</div>}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        )}
-                    </div>
-                </div>
-            );
+                    return (
+                        /*#__PURE__*/
+                        React.createElement("div", {
+                            key: date,
+                            onClick: function onClick() {
+                                return assignment && onSelectShift(date, assignment);
+                            },
+                            className: "p-4 rounded-xl border flex items-center justify-between transition-all " + cardClass + " " + (!assignment ? 'cursor-default' : 'cursor-pointer')
+                        }, /*#__PURE__*/
+                        React.createElement("div", {
+                            className: "flex flex-col items-center justify-center w-12 border-r border-white/10 pr-4 mr-4"
+                        }, /*#__PURE__*/
+                        React.createElement("span", {
+                            className: "text-xs uppercase font-bold opacity-70"
+                        }, new Date(date).toLocaleDateString('es-ES', {
+                            weekday: 'short'
+                        })), /*#__PURE__*/
+                        React.createElement("span", {
+                            className: "text-xl font-bold"
+                        }, date.split('-')[2])), /*#__PURE__*/
+                        React.createElement("div", {
+                            className: "flex-1"
+                        }, assignment ? /*#__PURE__*/
+                        React.createElement(React.Fragment, null, /*#__PURE__*/
+                        React.createElement("div", {
+                            className: "font-bold text-lg"
+                        }, patient ? patient.name : 'Paciente desconocido'), /*#__PURE__*/
+                        React.createElement("div", {
+                            className: "text-sm opacity-90 flex items-center gap-2"
+                        }, /*#__PURE__*/
+                        React.createElement("span", null, assignment.shift === 'dia' ? '☀️ Turno Día' : '🌙 Turno Noche'))) : /*#__PURE__*/
+                        React.createElement("span", {
+                            className: "text-sm italic opacity-50"
+                        }, "Sin asignaci\xF3n / Descanso")), assignment && /*#__PURE__*/
+                        React.createElement("div", {
+                            className: "text-2xl opacity-50"
+                        }, "\u279C"))
+                    );
+                })))));
         }
 
-        function DailyLog({ user, date, assignment, onBack }) {
-            const [records, setRecords] = React.useState({});
-            const [obs, setObs] = React.useState("");
-            const [saving, setSaving] = React.useState(false);
+        function DailyLog(_ref4) {
+            var user = _ref4.user,
+                date = _ref4.date,
+                assignment = _ref4.assignment,
+                onBack = _ref4.onBack;
 
-            const patient = PATIENTS.find(p => p.id === assignment.patientId);
-            const canEdit = isEditable(date, assignment.shift);
-            const docId = `${date}_${assignment.shift}_${assignment.patientId}`;
+            var _React$useState10 = React.useState({}),
+                records = _React$useState10[0],
+                setRecords = _React$useState10[1];
 
-            React.useEffect(() => {
-                const unsubscribe = db.collection("registros_diarios").doc(docId).onSnapshot(doc => {
+            var _React$useState11 = React.useState(""),
+                obs = _React$useState11[0],
+                setObs = _React$useState11[1];
+
+            var _React$useState12 = React.useState(false),
+                saving = _React$useState12[0],
+                setSaving = _React$useState12[1];
+
+            var patient = PATIENTS.find(function(p) {
+                return p.id === assignment.patientId;
+            });
+            var canEdit = isEditable(date, assignment.shift);
+            var docId = "".concat(date, "_").concat(assignment.shift, "_").concat(assignment.patientId);
+
+            React.useEffect(function() {
+                var unsubscribe = db.collection("registros_diarios").doc(docId).onSnapshot(function(doc) {
                     if (doc.exists) {
                         setRecords(doc.data().records || {});
                         setObs(doc.data().generalObservation || "");
                     }
                 });
-                return () => unsubscribe();
+                return function() {
+                    return unsubscribe();
+                };
             }, [docId]);
 
-            const handleToggle = async (taskId) => {
-                if (!canEdit) return;
-                const now = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                const current = records[taskId] || {};
-                const newRec = { ...records, [taskId]: { ...current, checked: !current.checked, completedAt: !current.checked ? now : null } };
-                setRecords(newRec); // Optimistic
-                
-                await db.collection("registros_diarios").doc(docId).set({
-                    date, shift: assignment.shift, patientId: assignment.patientId, caregiver: user.name,
-                    lastUpdate: firebase.firestore.Timestamp.now(),
-                    records: newRec, generalObservation: obs
-                }, { merge: true });
+            var handleToggle = function handleToggle(taskId) {
+                return function() {
+                    if (!canEdit) return;
+                    var now = new Date().toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    var current = records[taskId] || {};
+                    var newRec = Object.assign(Object.assign({}, records), {}, {
+                        [taskId]: Object.assign(Object.assign({}, current), {}, {
+                            checked: !current.checked,
+                            completedAt: !current.checked ? now : null
+                        })
+                    });
+                    setRecords(newRec); // Optimistic
+
+                    db.collection("registros_diarios").doc(docId).set({
+                        date: date,
+                        shift: assignment.shift,
+                        patientId: assignment.patientId,
+                        caregiver: user.name,
+                        lastUpdate: firebase.firestore.Timestamp.now(),
+                        records: newRec,
+                        generalObservation: obs
+                    }, {
+                        merge: true
+                    });
+                };
             };
 
-            const saveObs = async () => {
-                if(!canEdit) return;
-                setSaving(true);
-                await db.collection("registros_diarios").doc(docId).set({ generalObservation: obs }, { merge: true });
-                setSaving(false);
+            var saveObs = function saveObs() {
+                return function() {
+                    if (!canEdit) return;
+                    setSaving(true);
+                    db.collection("registros_diarios").doc(docId).set({
+                        generalObservation: obs
+                    }, {
+                        merge: true
+                    }).then(function() {
+                        return setSaving(false);
+                    });
+                };
             };
 
-            if (!patient) return <div className="p-10 text-white">Error: Paciente no encontrado</div>;
+            if (!patient) return /*#__PURE__*/React.createElement("div", {
+                className: "p-10 text-white"
+            }, "Error: Paciente no encontrado");
 
             return (
-                <div className="min-h-screen bg-slate-900 pb-20 fade-in">
-                    <div className={`sticky top-0 z-20 p-4 flex justify-between items-center shadow-md ${canEdit ? 'bg-[#0AB2BB]' : 'bg-slate-700'}`}>
-                        <button onClick={onBack} className="text-white font-bold text-xl flex items-center"><Icons.Back/> Atrás</button>
-                        <div className="text-center text-white">
-                            <h2 className="font-bold text-lg">{date}</h2>
-                            <p className="text-xs uppercase opacity-90">{assignment.shift} - {canEdit ? 'EDITANDO' : 'SOLO LECTURA'}</p>
-                        </div>
-                        <div className="w-8"></div>
-                    </div>
-
-                    <div className="p-4 max-w-2xl mx-auto space-y-6">
-                        <div className="bg-slate-800 p-4 rounded-xl border border-slate-700">
-                            <h3 className="text-[#0AB2BB] font-bold text-lg">{patient.name}</h3>
-                            <p className="text-slate-400 text-sm mb-2">{patient.condition}</p>
-                            <div className="bg-slate-900 p-2 rounded text-xs text-slate-300">
-                                📍 {patient.info.address} <br/>
-                                🚑 {patient.info.emergency}
-                            </div>
-                        </div>
-
-                        <div>
-                            <h4 className="text-white font-bold mb-3 uppercase text-sm tracking-wider">Actividades</h4>
-                            <div className="space-y-3">
-                                {patient.tasks[assignment.shift].map(task => {
-                                    const rec = records[task.id] || {};
-                                    return (
-                                        <div key={task.id} 
-                                            onClick={() => handleToggle(task.id)}
-                                            className={`p-4 rounded-xl border flex items-center justify-between transition-all ${rec.checked ? 'bg-[#0AB2BB]/10 border-[#0AB2BB]' : 'bg-slate-800 border-slate-700'} ${canEdit ? 'cursor-pointer active:scale-95' : 'opacity-70'}`}
-                                        >
-                                            <div>
-                                                <div className={`font-medium ${rec.checked ? 'text-[#0AB2BB] line-through' : 'text-white'}`}>{task.text}</div>
-                                                {rec.checked && <div className="text-xs text-[#0AB2BB] font-bold">Completado: {rec.completedAt}</div>}
-                                            </div>
-                                            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${rec.checked ? 'bg-[#0AB2BB] border-[#0AB2BB]' : 'border-slate-500'}`}>
-                                                {rec.checked && <span className="text-white text-xs">✓</span>}
-                                            </div>
-                                        </div>
-                                    )
-                                })}
-                            </div>
-                        </div>
-
-                        <div>
-                            <h4 className="text-white font-bold mb-3 uppercase text-sm tracking-wider">Bitácora</h4>
-                            <textarea 
-                                className={`w-full bg-slate-800 border ${canEdit ? 'border-slate-600 focus:border-[#0AB2BB]' : 'border-slate-800'} rounded-xl p-3 text-white outline-none h-32`}
-                                placeholder={canEdit ? "Escribe novedades del turno..." : "Sin observaciones"}
-                                value={obs}
-                                onChange={(e) => setObs(e.target.value)}
-                                onBlur={saveObs}
-                                readOnly={!canEdit}
-                            ></textarea>
-                            {saving && <span className="text-xs text-[#0AB2BB] animate-pulse">Guardando...</span>}
-                        </div>
-                    </div>
-                </div>
-            );
+                /*#__PURE__*/
+                React.createElement("div", {
+                    className: "min-h-screen bg-slate-900 pb-20 fade-in"
+                }, /*#__PURE__*/
+                React.createElement("div", {
+                    className: "sticky top-0 z-20 p-4 flex justify-between items-center shadow-md " + (canEdit ? 'bg-[#0AB2BB]' : 'bg-slate-700')
+                }, /*#__PURE__*/
+                React.createElement("button", {
+                    onClick: onBack,
+                    className: "text-white font-bold text-xl flex items-center"
+                }, /*#__PURE__*/
+                React.createElement(Icons.Back, null), " Atr\xE1s"), /*#__PURE__*/
+                React.createElement("div", {
+                    className: "text-center text-white"
+                }, /*#__PURE__*/
+                React.createElement("h2", {
+                    className: "font-bold text-lg"
+                }, date), /*#__PURE__*/
+                React.createElement("p", {
+                    className: "text-xs uppercase opacity-90"
+                }, assignment.shift, " - ", canEdit ? 'EDITANDO' : 'SOLO LECTURA')), /*#__PURE__*/
+                React.createElement("div", {
+                    className: "w-8"
+                })), /*#__PURE__*/
+                React.createElement("div", {
+                    className: "p-4 max-w-2xl mx-auto space-y-6"
+                }, /*#__PURE__*/
+                React.createElement("div", {
+                    className: "bg-slate-800 p-4 rounded-xl border border-slate-700"
+                }, /*#__PURE__*/
+                React.createElement("h3", {
+                    className: "text-[#0AB2BB] font-bold text-lg"
+                }, patient.name), /*#__PURE__*/
+                React.createElement("p", {
+                    className: "text-slate-400 text-sm mb-2"
+                }, patient.condition), /*#__PURE__*/
+                React.createElement("div", {
+                    className: "bg-slate-900 p-2 rounded text-xs text-slate-300"
+                }, "\uD83D\uDCCD ", patient.info.address, " ", /*#__PURE__*/
+                React.createElement("br", null), "\uD83D\uDEA8 ", patient.info.emergency)), /*#__PURE__*/
+                React.createElement("div", null, /*#__PURE__*/
+                React.createElement("h4", {
+                    className: "text-white font-bold mb-3 uppercase text-sm tracking-wider"
+                }, "Actividades"), /*#__PURE__*/
+                React.createElement("div", {
+                    className: "space-y-3"
+                }, patient.tasks[assignment.shift].map(function(task) {
+                    var rec = records[task.id] || {};
+                    return (
+                        /*#__PURE__*/
+                        React.createElement("div", {
+                            key: task.id,
+                            onClick: handleToggle(task.id),
+                            className: "p-4 rounded-xl border flex items-center justify-between transition-all " + (rec.checked ? 'bg-[#0AB2BB]/10 border-[#0AB2BB]' : 'bg-slate-800 border-slate-700') + " " + (canEdit ? 'cursor-pointer active:scale-95' : 'opacity-70')
+                        }, /*#__PURE__*/
+                        React.createElement("div", null, /*#__PURE__*/
+                        React.createElement("div", {
+                            className: "font-medium " + (rec.checked ? 'text-[#0AB2BB] line-through' : 'text-white')
+                        }, task.text), rec.checked && /*#__PURE__*/
+                        React.createElement("div", {
+                            className: "text-xs text-[#0AB2BB] font-bold"
+                        }, "Completado: ", rec.completedAt)), /*#__PURE__*/
+                        React.createElement("div", {
+                            className: "w-6 h-6 rounded-full border-2 flex items-center justify-center " + (rec.checked ? 'bg-[#0AB2BB] border-[#0AB2BB]' : 'border-slate-500')
+                        }, rec.checked && /*#__PURE__*/
+                        React.createElement("span", {
+                            className: "text-white text-xs"
+                        }, "\u2713")))
+                    );
+                }))), /*#__PURE__*/
+                React.createElement("div", null, /*#__PURE__*/
+                React.createElement("h4", {
+                    className: "text-white font-bold mb-3 uppercase text-sm tracking-wider"
+                }, "Bit\xE1cora"), /*#__PURE__*/
+                React.createElement("textarea", {
+                    className: "w-full bg-slate-800 border " + (canEdit ? 'border-slate-600 focus:border-[#0AB2BB]' : 'border-slate-800') + " rounded-xl p-3 text-white outline-none h-32",
+                    placeholder: canEdit ? "Escribe novedades del turno..." : "Sin observaciones",
+                    value: obs,
+                    onChange: function onChange(e) {
+                        return setObs(e.target.value);
+                    },
+                    onBlur: saveObs(),
+                    readOnly: !canEdit
+                }), saving && /*#__PURE__*/
+                React.createElement("span", {
+                    className: "text-xs text-[#0AB2BB] animate-pulse"
+                }, "Guardando...")))));
         }
 
         function App() {
-            const [user, setUser] = React.useState(null);
-            const [view, setView] = React.useState("login");
-            const [currentShiftData, setCurrentShiftData] = React.useState(null);
+            var _React$useState13 = React.useState(null),
+                user = _React$useState13[0],
+                setUser = _React$useState13[1];
 
-            const handleLogin = (u) => {
+            var _React$useState14 = React.useState("login"),
+                view = _React$useState14[0],
+                setView = _React$useState14[1];
+
+            var _React$useState15 = React.useState(null),
+                currentShiftData = _React$useState15[0],
+                setCurrentShiftData = _React$useState15[1];
+
+            var handleLogin = function handleLogin(u) {
                 setUser(u);
                 if (u.role === 'admin') setView("admin");
                 else setView("calendar");
             };
 
-            const handleLogout = () => {
+            var handleLogout = function handleLogout() {
                 setUser(null);
                 setView("login");
                 setCurrentShiftData(null);
             };
 
             return (
-                <div className="relative">
-                    {view === "login" && <LoginScreen onLogin={handleLogin} />}
-                    {view === "admin" && <AdminPanel user={user} onLogout={handleLogout} />}
-                    {view === "calendar" && <CaregiverCalendar user={user} onLogout={handleLogout} onSelectShift={(d, a) => { setCurrentShiftData({date: d, assignment: a}); setView("log"); }} />}
-                    {view === "log" && <DailyLog user={user} date={currentShiftData.date} assignment={currentShiftData.assignment} onBack={() => setView("calendar")} />}
-                </div>
+                /*#__PURE__*/
+                React.createElement("div", {
+                    className: "relative"
+                }, view === "login" && /*#__PURE__*/
+                React.createElement(LoginScreen, {
+                    onLogin: handleLogin
+                }), view === "admin" && /*#__PURE__*/
+                React.createElement(AdminPanel, {
+                    user: user,
+                    onLogout: handleLogout
+                }), view === "calendar" && /*#__PURE__*/
+                React.createElement(CaregiverCalendar, {
+                    user: user,
+                    onLogout: handleLogout,
+                    onSelectShift: function onSelectShift(d, a) {
+                        setCurrentShiftData({
+                            date: d,
+                            assignment: a
+                        });
+                        setView("log");
+                    }
+                }), view === "log" && /*#__PURE__*/
+                React.createElement(DailyLog, {
+                    user: user,
+                    date: currentShiftData.date,
+                    assignment: currentShiftData.assignment,
+                    onBack: function onBack() {
+                        return setView("calendar");
+                    }
+                }))
             );
         }
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+        var root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render( /*#__PURE__*/React.createElement(App, null));
     </script>
 </body>
 </html>
