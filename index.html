@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="es" class="dark">
-<head>
+<<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MUVN - Gestión Integral</title>
+    <title>MUVN - Acceso Seguro</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -12,32 +12,20 @@
             theme: {
                 extend: {
                     colors: {
-                        muvnTeal: '#0AB2BB',
+                        muvnBlue: '#0DA4BF',
                         muvnDark: '#0E0E0E', 
                     }
                 }
             }
         }
     </script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .custom-input { @apply w-full p-3 bg-white border border-gray-300 rounded-xl text-gray-700 font-semibold focus:ring-2 focus:ring-[#0AB2BB] focus:border-[#0AB2BB] outline-none transition-all shadow-sm appearance-none; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        
-        /* Pantalla de carga */
-        #loading-screen { position: fixed; inset: 0; bg-slate-900; display: flex; justify-content: center; align-items: center; color: #0AB2BB; z-index: 50; }
-    </style>
-
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <script crossorigin src="https://unpkg.com/babel-standalone@6/babel.min.js"></script> 
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-</head>
+    
+    </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen">
 
     <div id="root">
