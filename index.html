@@ -19,35 +19,50 @@
             }
         }
     </script>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
-
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
         .fade-in { animation: fadeIn 0.4s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .custom-input {
-            @apply w-full p-3 bg-white border border-gray-300 rounded-xl text-gray-700 font-semibold focus:ring-2 focus:ring-[#0AB2BB] focus:border-[#0AB2BB] outline-none transition-all shadow-sm appearance-none;
-        }
-        
-        /* Scrollbar oculta para el calendario horizontal */
+        .custom-input { @apply w-full p-3 bg-white border border-gray-300 rounded-xl text-gray-700 font-semibold focus:ring-2 focus:ring-[#0AB2BB] focus:border-[#0AB2BB] outline-none transition-all shadow-sm appearance-none; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Pantalla de carga */
+        #loading-screen { position: fixed; inset: 0; bg-slate-900; display: flex; justify-content: center; align-items: center; color: #0AB2BB; z-index: 50; }
     </style>
+
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen">
 
-    <div id="root"></div>
+    <div id="root">
+        <div style="height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; color: #0AB2BB;">
+            <h2 style="font-size: 24px; font-weight: bold;">Cargando MUVN...</h2>
+            <p style="color: #64748b;">Si esto tarda más de 5 segundos, revisa tu conexión.</p>
+        </div>
+    </div>
+
+    <script>
+        window.onerror = function(message, source, lineno, colno, error) {
+            document.getElementById('root').innerHTML = `
+                <div style="padding: 20px; color: #ff6b6b; background: #1a202c; height: 100vh;">
+                    <h1 style="font-size: 24px; margin-bottom: 10px;">⚠️ Ocurrió un error</h1>
+                    <p><strong>Mensaje:</strong> ${message}</p>
+                    <p><strong>Línea:</strong> ${lineno}</p>
+                    <p style="margin-top: 20px; color: #94a3b8;">Por favor, envía una captura de esta pantalla al desarrollador.</p>
+                </div>
+            `;
+        };
+    </script>
 
     <script type="text/babel">
         // ---------------------------------------------------------
-        // 1. CONFIGURACIÓN
+        // 1. CONFIGURACIÓN FIREBASE
         // ---------------------------------------------------------
         const firebaseConfig = {
             apiKey: "AIzaSyDmf2tlJYR7cP_vxv66tVozQDBFehURGXM",
@@ -58,14 +73,18 @@
             appId: "1:15120958868:web:ec1d059d08f631bb81fb81"
         };
 
-        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        db.settings({ experimentalForceLongPolling: true }); 
+        try {
+            if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+            var db = firebase.firestore();
+            db.settings({ experimentalForceLongPolling: true }); 
+        } catch (error) {
+            document.getElementById('root').innerHTML = "<h3 style='color:red; p:10px'>Error conectando a Firebase: " + error.message + "</h3>";
+            throw error;
+        }
 
         // ---------------------------------------------------------
-        // 2. DATOS BASE (Usuarios y Pacientes)
+        // 2. DATOS
         // ---------------------------------------------------------
-        // Nota: Ya no asignamos pacientes aquí, solo definimos quiénes son los usuarios.
         const STAFF = [
             { name: "Mario Ulises Vallejo Navarrete", pin: "0000", role: "admin" }, 
             { name: "Ana Martínez", pin: "1111", role: "caregiver" },
@@ -101,64 +120,51 @@
             { id: 'p12', name: "Sra. Lupita", condition: "Postración", info: { address: "Calle Obregón", emergency: "Hijo: Beto", age: "90", weight: "45kg", bloodType: "A-", allergies: "Adhesivo", doctor: "Dr. Heridas", diet: "Sonda" }, tasks: { dia: [{id:'p12d1', text:'Sonda', type:'food'}], noche: [{id:'p12n1', text:'Movilización', type:'physio'}] } }
         ];
 
-        // Icons
+        // ---------------------------------------------------------
+        // 3. HELPERS
+        // ---------------------------------------------------------
         const Icons = {
             Lock: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>,
             User: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>,
-            Calendar: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>,
-            Save: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+            Back: () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
         };
 
-        // ---------------------------------------------------------
-        // 3. UTILIDADES DE FECHA Y VALIDACIÓN
-        // ---------------------------------------------------------
         const getTodayStr = () => new Date().toISOString().split('T')[0];
         
-        // Generar días para calendario (15 atrás, 15 adelante)
         const getCalendarRange = () => {
             const dates = [];
+            const today = new Date();
             for (let i = -15; i <= 15; i++) {
-                const d = new Date();
-                d.setDate(d.getDate() + i);
+                const d = new Date(today);
+                d.setDate(today.getDate() + i);
                 dates.push(d.toISOString().split('T')[0]);
             }
             return dates;
         };
 
-        // Regla de las 2 horas: 
-        // Día (07:00-19:00) -> Editable hasta 21:00
-        // Noche (19:00-07:00) -> Editable hasta 09:00 del día siguiente (la lógica de día siguiente se simplifica aquí comparando timestamps)
         const isEditable = (dateStr, shift) => {
             const now = new Date();
-            const recordDate = new Date(dateStr + "T12:00:00"); // Asumir medio día para comparar fechas
+            const recordDate = new Date(dateStr + "T12:00:00");
             const today = new Date(getTodayStr() + "T12:00:00");
 
-            // Si es futuro: No editable (aún no pasa)
             if (recordDate > today) return false;
             
-            // Si es pasado (ayer o antes): No editable
             if (recordDate < today) {
-                // Excepción: Si es turno de noche de ayer, y son antes de las 9am de hoy
                 const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
-                const isYesterday = recordDate.toDateString() === yesterday.toDateString();
+                // Comparar solo fechas (sin hora)
+                const isYesterday = recordDate.toISOString().split('T')[0] === yesterday.toISOString().split('T')[0];
                 if (isYesterday && shift === 'noche' && now.getHours() < 9) return true;
                 return false;
             }
 
-            // Si es hoy:
             const currentHour = now.getHours();
-            if (shift === 'dia') {
-                // Editable si no han pasado las 21:00 (19:00 + 2h)
-                return currentHour < 21;
-            } else if (shift === 'noche') {
-                // Editable siempre hoy (porque acaba mañana)
-                return true;
-            }
+            if (shift === 'dia') return currentHour < 21; 
+            if (shift === 'noche') return true; 
             return false;
         };
 
         // ---------------------------------------------------------
-        // 4. PANTALLAS
+        // 4. COMPONENTES
         // ---------------------------------------------------------
 
         function LoginScreen({ onLogin }) {
@@ -175,7 +181,7 @@
 
             return (
                 <div className="flex flex-col items-center justify-center min-h-screen px-4 bg-slate-900">
-                    <div className="bg-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-sm text-center border border-slate-700 mx-auto">
+                    <div className="bg-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-sm text-center border border-slate-700 mx-auto fade-in">
                         <div className="mx-auto w-32 h-32 rounded-full flex items-center justify-center mb-6 overflow-hidden bg-[#0E0E0E] p-1 border-4 border-[#0AB2BB]">
                             <img src="https://raw.githubusercontent.com/jesusvn1993mplvt3-ai/MUVN-JMVN/main/LOGO%20MUVN.jpg" alt="Logo" className="w-full h-full object-contain" />
                         </div>
@@ -184,9 +190,9 @@
                         <form onSubmit={handleAttempt} className="space-y-6">
                             <div className="text-left">
                                 <label className="block text-xs font-bold text-slate-300 uppercase mb-2 ml-1">Usuario</label>
-                                <select className="custom-input text-sm" value={selectedUser} onChange={(e) => setSelectedUser(e.target.value)}>
+                                <select className="custom-input text-sm" value={selectedUser} onChange={(e) => {setSelectedUser(e.target.value); setError("");}}>
                                     <option value="">-- Seleccionar --</option>
-                                    {STAFF.map(c => <option key={c.pin} value={c.name}>{c.name}</option>)}
+                                    {STAFF.map(c => <option key={c.pin} value={c.name}>{c.name} {c.role === 'admin' ? '(Admin)' : ''}</option>)}
                                 </select>
                             </div>
                             {selectedUser && (
@@ -206,55 +212,50 @@
             );
         }
 
-        // --- PANTALLA DE ADMINISTRADOR: GESTIÓN DE TURNOS ---
         function AdminPanel({ user, onLogout }) {
             const [selectedDate, setSelectedDate] = React.useState(getTodayStr());
             const [assignments, setAssignments] = React.useState({});
-            const [status, setStatus] = React.useState("idle");
+            const [loading, setLoading] = React.useState(false);
 
-            // Cargar asignaciones de la fecha seleccionada
             React.useEffect(() => {
-                setStatus("loading");
+                setLoading(true);
                 const unsubscribe = db.collection("asignaciones").doc(selectedDate)
                     .onSnapshot(doc => {
                         if(doc.exists) setAssignments(doc.data());
                         else setAssignments({});
-                        setStatus("idle");
+                        setLoading(false);
                     });
                 return () => unsubscribe();
             }, [selectedDate]);
 
             const handleAssign = async (caregiverName, patientId, shift) => {
                 const newAssignments = { ...assignments, [caregiverName]: { patientId, shift } };
-                // Si seleccionan "Descanso", borramos la asignación
                 if (patientId === "off") delete newAssignments[caregiverName];
-                
-                // Guardar en Firestore
                 await db.collection("asignaciones").doc(selectedDate).set(newAssignments);
             };
 
             return (
-                <div className="min-h-screen bg-slate-900 pb-20">
+                <div className="min-h-screen bg-slate-900 pb-20 fade-in">
                     <header className="bg-slate-800 p-4 border-b border-slate-700 flex justify-between items-center sticky top-0 z-10">
                         <h1 className="text-white font-bold text-lg"><span className="text-[#0AB2BB]">MUVN</span> Admin</h1>
                         <button onClick={onLogout} className="text-slate-400 hover:text-white text-sm">Salir</button>
                     </header>
 
                     <div className="p-4 max-w-4xl mx-auto">
-                        <div className="bg-slate-800 p-4 rounded-xl mb-6 border border-slate-700">
+                        <div className="bg-slate-800 p-4 rounded-xl mb-6 border border-slate-700 sticky top-20 z-10 shadow-lg">
                             <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Fecha a Gestionar</label>
                             <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="custom-input bg-white text-center font-bold text-lg"/>
+                            {loading && <p className="text-center text-[#0AB2BB] text-xs mt-2">Cargando datos...</p>}
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {STAFF.filter(u => u.role === 'caregiver').map(caregiver => {
                                 const assignment = assignments[caregiver.name] || { patientId: "", shift: "" };
-                                
                                 return (
                                     <div key={caregiver.pin} className="bg-slate-800 p-4 rounded-xl border border-slate-700 flex flex-col gap-3">
                                         <div className="flex items-center gap-2 border-b border-slate-700 pb-2">
-                                            <div className="bg-[#0AB2BB] w-8 h-8 rounded-full flex items-center justify-center font-bold text-white">
-                                                {caregiver.name.charAt(0)}
+                                            <div className="bg-[#0AB2BB] w-8 h-8 rounded-full flex items-center justify-center font-bold text-white uppercase text-xs">
+                                                {caregiver.name.slice(0,2)}
                                             </div>
                                             <span className="font-bold text-white text-sm">{caregiver.name}</span>
                                         </div>
@@ -294,22 +295,14 @@
             );
         }
 
-        // --- PANTALLA DE CUIDADOR: CALENDARIO ---
         function CaregiverCalendar({ user, onLogout, onSelectShift }) {
-            const [dates, setDates] = React.useState(getCalendarRange());
+            const [dates] = React.useState(getCalendarRange());
             const [myAssignments, setMyAssignments] = React.useState({});
             const [loading, setLoading] = React.useState(true);
 
             React.useEffect(() => {
-                // Cargar asignaciones para este cuidador en el rango de fechas
-                // Nota: Por simplicidad, leeremos día a día en un loop o cargaremos todo un mes si la estructura lo permite.
-                // Para optimizar, aquí leeremos "on demand" al renderizar, pero lo ideal es una query compuesta.
-                // Como Firestore client-side es rápido con cache, haremos listeners por fecha visible o una query de rango si creamos un campo 'date'.
-                // *Estrategia simple:* Cargar la colección 'asignaciones' (los documentos son fechas YYYY-MM-DD).
-                
+                // Escuchar toda la colección 'asignaciones' (Para MVP, esto carga todo. En prod usar rangos).
                 const unsubscribe = db.collection("asignaciones")
-                    .where(firebase.firestore.FieldPath.documentId(), '>=', dates[0])
-                    .where(firebase.firestore.FieldPath.documentId(), '<=', dates[dates.length-1])
                     .onSnapshot(snapshot => {
                         const data = {};
                         snapshot.docs.forEach(doc => {
@@ -321,17 +314,11 @@
                         setMyAssignments(data);
                         setLoading(false);
                     });
-                    
                 return () => unsubscribe();
             }, []);
 
-            const handleDateClick = (date, assignment) => {
-                if (!assignment) return;
-                onSelectShift(date, assignment);
-            };
-
             return (
-                <div className="min-h-screen bg-slate-900 pb-10">
+                <div className="min-h-screen bg-slate-900 pb-10 fade-in">
                     <header className="bg-slate-800 p-4 border-b border-slate-700 flex justify-between items-center sticky top-0 z-10 shadow-md">
                         <div>
                             <h1 className="text-white font-bold">Hola, {user.name.split(' ')[0]}</h1>
@@ -348,17 +335,16 @@
                                     const isToday = date === getTodayStr();
                                     const patient = assignment ? PATIENTS.find(p => p.id === assignment.patientId) : null;
                                     
-                                    // Estado visual
-                                    let cardClass = "bg-slate-800 border-slate-700 opacity-50"; // Por defecto deshabilitado/vacío
+                                    let cardClass = "bg-slate-800 border-slate-700 opacity-50"; 
                                     if (assignment) {
-                                        if (isToday) cardClass = "bg-[#0AB2BB] border-[#0AB2BB] text-white shadow-lg scale-[1.02]";
+                                        if (isToday) cardClass = "bg-[#0AB2BB] border-[#0AB2BB] text-white shadow-lg scale-[1.02] border-2";
                                         else cardClass = "bg-slate-800 border-slate-600 text-slate-300 hover:border-[#0AB2BB]";
                                     }
 
                                     return (
                                         <div 
                                             key={date} 
-                                            onClick={() => handleDateClick(date, assignment)}
+                                            onClick={() => assignment && onSelectShift(date, assignment)}
                                             className={`p-4 rounded-xl border flex items-center justify-between transition-all ${cardClass} ${!assignment ? 'cursor-default' : 'cursor-pointer'}`}
                                         >
                                             <div className="flex flex-col items-center justify-center w-12 border-r border-white/10 pr-4 mr-4">
@@ -390,7 +376,6 @@
             );
         }
 
-        // --- PANTALLA DE REGISTRO (LOGBOOK) ---
         function DailyLog({ user, date, assignment, onBack }) {
             const [records, setRecords] = React.useState({});
             const [obs, setObs] = React.useState("");
@@ -400,7 +385,6 @@
             const canEdit = isEditable(date, assignment.shift);
             const docId = `${date}_${assignment.shift}_${assignment.patientId}`;
 
-            // Cargar datos reales
             React.useEffect(() => {
                 const unsubscribe = db.collection("registros_diarios").doc(docId).onSnapshot(doc => {
                     if (doc.exists) {
@@ -416,9 +400,7 @@
                 const now = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
                 const current = records[taskId] || {};
                 const newRec = { ...records, [taskId]: { ...current, checked: !current.checked, completedAt: !current.checked ? now : null } };
-                
-                // Optimistic update
-                setRecords(newRec); 
+                setRecords(newRec); // Optimistic
                 
                 await db.collection("registros_diarios").doc(docId).set({
                     date, shift: assignment.shift, patientId: assignment.patientId, caregiver: user.name,
@@ -427,10 +409,6 @@
                 }, { merge: true });
             };
 
-            const handleObs = async (val) => {
-                if(!canEdit) return;
-                setObs(val); // Local update
-            };
             const saveObs = async () => {
                 if(!canEdit) return;
                 setSaving(true);
@@ -441,18 +419,17 @@
             if (!patient) return <div className="p-10 text-white">Error: Paciente no encontrado</div>;
 
             return (
-                <div className="min-h-screen bg-slate-900 pb-20">
+                <div className="min-h-screen bg-slate-900 pb-20 fade-in">
                     <div className={`sticky top-0 z-20 p-4 flex justify-between items-center shadow-md ${canEdit ? 'bg-[#0AB2BB]' : 'bg-slate-700'}`}>
-                        <button onClick={onBack} className="text-white font-bold text-xl">←</button>
+                        <button onClick={onBack} className="text-white font-bold text-xl flex items-center"><Icons.Back/> Atrás</button>
                         <div className="text-center text-white">
                             <h2 className="font-bold text-lg">{date}</h2>
                             <p className="text-xs uppercase opacity-90">{assignment.shift} - {canEdit ? 'EDITANDO' : 'SOLO LECTURA'}</p>
                         </div>
-                        <div className="w-8"></div> {/* Spacer */}
+                        <div className="w-8"></div>
                     </div>
 
                     <div className="p-4 max-w-2xl mx-auto space-y-6">
-                        {/* Ficha Resumida */}
                         <div className="bg-slate-800 p-4 rounded-xl border border-slate-700">
                             <h3 className="text-[#0AB2BB] font-bold text-lg">{patient.name}</h3>
                             <p className="text-slate-400 text-sm mb-2">{patient.condition}</p>
@@ -462,7 +439,6 @@
                             </div>
                         </div>
 
-                        {/* Tareas */}
                         <div>
                             <h4 className="text-white font-bold mb-3 uppercase text-sm tracking-wider">Actividades</h4>
                             <div className="space-y-3">
@@ -486,14 +462,13 @@
                             </div>
                         </div>
 
-                        {/* Observaciones */}
                         <div>
                             <h4 className="text-white font-bold mb-3 uppercase text-sm tracking-wider">Bitácora</h4>
                             <textarea 
                                 className={`w-full bg-slate-800 border ${canEdit ? 'border-slate-600 focus:border-[#0AB2BB]' : 'border-slate-800'} rounded-xl p-3 text-white outline-none h-32`}
                                 placeholder={canEdit ? "Escribe novedades del turno..." : "Sin observaciones"}
                                 value={obs}
-                                onChange={(e) => handleObs(e.target.value)}
+                                onChange={(e) => setObs(e.target.value)}
                                 onBlur={saveObs}
                                 readOnly={!canEdit}
                             ></textarea>
@@ -504,11 +479,10 @@
             );
         }
 
-        // --- APP PRINCIPAL ---
         function App() {
-            const [user, setUser] = React.useState(null); // { name, role, ... }
-            const [view, setView] = React.useState("login"); // login, admin, calendar, log
-            const [currentShiftData, setCurrentShiftData] = React.useState(null); // { date, assignment }
+            const [user, setUser] = React.useState(null);
+            const [view, setView] = React.useState("login");
+            const [currentShiftData, setCurrentShiftData] = React.useState(null);
 
             const handleLogin = (u) => {
                 setUser(u);
@@ -522,18 +496,13 @@
                 setCurrentShiftData(null);
             };
 
-            const handleSelectShift = (date, assignment) => {
-                setCurrentShiftData({ date, assignment });
-                setView("log");
-            };
-
             return (
-                <>
+                <div className="relative">
                     {view === "login" && <LoginScreen onLogin={handleLogin} />}
                     {view === "admin" && <AdminPanel user={user} onLogout={handleLogout} />}
-                    {view === "calendar" && <CaregiverCalendar user={user} onLogout={handleLogout} onSelectShift={handleSelectShift} />}
+                    {view === "calendar" && <CaregiverCalendar user={user} onLogout={handleLogout} onSelectShift={(d, a) => { setCurrentShiftData({date: d, assignment: a}); setView("log"); }} />}
                     {view === "log" && <DailyLog user={user} date={currentShiftData.date} assignment={currentShiftData.assignment} onBack={() => setView("calendar")} />}
-                </>
+                </div>
             );
         }
 
