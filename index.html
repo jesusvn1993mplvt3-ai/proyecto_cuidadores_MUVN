@@ -1,413 +1,539 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MUVN - Gestión Integral</title>
     
-    <!-- --- CONFIGURACIÓN PARA WHATSAPP / REDES SOCIALES --- -->
-    <title>MUVN - Registro de Cuidados</title>
-    <meta name="description" content="Herramienta exclusiva para el equipo de cuidadores.">
-
-    <!-- Open Graph (Lo que ve WhatsApp/Facebook) -->
-    <meta property="og:type" content="website">
-    <meta property="og:title" content="MUVN - Equipo de Cuidados">
-    <meta property="og:description" content="Cuidar con el corazón hace la diferencia. ❤️ Gracias por tu dedicación diaria.">
-    <meta property="og:image" content="https://raw.githubusercontent.com/jesusvn1993mplvt3-ai/proyecto_cuidadores_MUVN/refs/heads/main/MUVN.jpg">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
-
-    <!-- Twitter Card (Opcional, para mejor compatibilidad) -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="MUVN - Equipo de Cuidados">
-    <meta name="twitter:description" content="Cuidar con el corazón hace la diferencia. ❤️ Gracias por tu dedicación diaria.">
-    <meta name="twitter:image" content="https://raw.githubusercontent.com/jesusvn1993mplvt3-ai/proyecto_cuidadores_MUVN/refs/heads/main/MUVN.jpg">
-    
-    <!-- --- LIBRERÍAS (NO TOCAR) --- -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        muvnTeal: '#0AB2BB',
+                        muvnDark: '#0E0E0E', 
+                    }
+                }
+            }
+        }
+    </script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
 
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+
     <style>
-        /* Animaciones suaves */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .custom-input {
+            @apply w-full p-3 bg-white border border-gray-300 rounded-xl text-gray-700 font-semibold focus:ring-2 focus:ring-[#0AB2BB] focus:border-[#0AB2BB] outline-none transition-all shadow-sm appearance-none;
         }
-        .animate-fade-in {
-            animation: fadeIn 0.5s ease-out forwards;
-        }
+        
+        /* Scrollbar oculta para el calendario horizontal */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="bg-blue-50 text-gray-800 font-sans pb-20">
+<body class="bg-slate-900 text-slate-100 min-h-screen">
 
     <div id="root"></div>
 
-    <!-- --- CÓDIGO DE LA APP --- -->
     <script type="text/babel">
-
-        // --- ICONOS ---
-        const Icons = {
-            Sun: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>,
-            Moon: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>,
-            User: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
-            CheckCircle: ({className}) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>,
-            Clock: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
-            Send: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>,
-            Trash2: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>,
-            Activity: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>,
-            AlertCircle: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>,
-            ClipboardList: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>,
-            Heart: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+        // ---------------------------------------------------------
+        // 1. CONFIGURACIÓN
+        // ---------------------------------------------------------
+        const firebaseConfig = {
+            apiKey: "AIzaSyDmf2tlJYR7cP_vxv66tVozQDBFehURGXM",
+            authDomain: "data-d064b.firebaseapp.com",
+            projectId: "data-d064b",
+            storageBucket: "data-d064b.firebasestorage.app",
+            messagingSenderId: "15120958868",
+            appId: "1:15120958868:web:ec1d059d08f631bb81fb81"
         };
 
-        // --- DATOS DE EJEMPLO ---
-        const CAREGIVERS = [
-            "Ana Martínez", "Carlos Velázquez", "Beatriz Solís", "David López", "Elena Ramírez"
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        db.settings({ experimentalForceLongPolling: true }); 
+
+        // ---------------------------------------------------------
+        // 2. DATOS BASE (Usuarios y Pacientes)
+        // ---------------------------------------------------------
+        // Nota: Ya no asignamos pacientes aquí, solo definimos quiénes son los usuarios.
+        const STAFF = [
+            { name: "Mario Ulises Vallejo Navarrete", pin: "0000", role: "admin" }, 
+            { name: "Ana Martínez", pin: "1111", role: "caregiver" },
+            { name: "Carlos Velázquez", pin: "2222", role: "caregiver" },
+            { name: "Beatriz Solís", pin: "3333", role: "caregiver" },
+            { name: "David López", pin: "4444", role: "caregiver" },
+            { name: "Elena Ramírez", pin: "5555", role: "caregiver" },
+            { name: "Fernando Ruiz", pin: "9999", role: "caregiver" },
+            { name: "Gabriela Torres", pin: "1010", role: "caregiver" },
+            { name: "Héctor Jiménez", pin: "2020", role: "caregiver" },
+            { name: "Isabel Castro", pin: "3030", role: "caregiver" },
+            { name: "Jorge Medina", pin: "4040", role: "caregiver" },
+            { name: "Karla Orozco", pin: "5050", role: "caregiver" },
+            { name: "Luis Navarro", pin: "6060", role: "caregiver" },
+            { name: "Mónica Pineda", pin: "7070", role: "caregiver" },
+            { name: "Néstor Vargas", pin: "8080", role: "caregiver" },
+            { name: "Olivia Rivas", pin: "9090", role: "caregiver" },
+            { name: "Pablo Estévez", pin: "1234", role: "caregiver" }
         ];
 
         const PATIENTS = [
-            {
-                id: 'p1',
-                name: "Don Roberto (Diabetes/Hipertensión)",
-                details: "Insulinodependiente. Riesgo de hipoglucemia nocturna.",
-                tasks: {
-                dia: [
-                    { id: 't1_d1', text: "Toma de Glucosa (Ayunas)", type: "vital" },
-                    { id: 't1_d2', text: "Administrar Insulina (NPH 15 uds)", type: "med" },
-                    { id: 't1_d3', text: "Desayuno (Dieta baja en azúcar)", type: "food" },
-                    { id: 't1_d4', text: "Toma de Presión Arterial", type: "vital" },
-                    { id: 't1_d5', text: "Administrar Metformina 850mg", type: "med" }
-                ],
-                noche: [
-                    { id: 't1_n1', text: "Cena ligera (7:00 PM)", type: "food" },
-                    { id: 't1_n2', text: "Revisión de pañal (Incontinencia leve)", type: "check", note: "Asegurar que esté seco antes de dormir." },
-                    { id: 't1_n3', text: "Administrar Insulina Nocturna", type: "med" },
-                    { id: 't1_n4', text: "Revisar temperatura habitación (Frío)", type: "env", note: "Si hace frío, agregar manta extra. Despertar a las 3 AM para baño." }
-                ]
-                }
-            },
-            {
-                id: 'p2',
-                name: "Doña María (Alzheimer)",
-                details: "Desorientación espacial. No dejar sola.",
-                tasks: {
-                dia: [
-                    { id: 'p2_d1', text: "Administrar Memantina 10mg", type: "med" },
-                    { id: 'p2_d2', text: "Aseo personal asistido", type: "hygiene" },
-                    { id: 'p2_d3', text: "Ejercicios cognitivos (Memoria)", type: "activity" },
-                    { id: 'p2_d4', text: "Hidratación (Vaso de agua)", type: "food" }
-                ],
-                noche: [
-                    { id: 'p2_n1', text: "Administrar Quetiapina (Si está agitada)", type: "med" },
-                    { id: 'p2_n2', text: "Subir barandales de la cama", type: "safety", note: "Riesgo de caídas al intentar levantarse." },
-                    { id: 'p2_n3', text: "Revisión de sueño cada 2 horas", type: "check" },
-                    { id: 'p2_n4', text: "Revisión de pañal (Cambio nocturno)", type: "hygiene", note: "Piel muy sensible, usar crema protectora." }
-                ]
-                }
-            },
-            {
-                id: 'p3',
-                name: "Sr. Pedro (Post-operatorio Cadera)",
-                details: "Movilidad reducida. Riesgo de escaras.",
-                tasks: {
-                dia: [
-                    { id: 'p3_d1', text: "Curación de herida quirúrgica", type: "nursing" },
-                    { id: 'p3_d2', text: "Analgésico (Tramadol)", type: "med" },
-                    { id: 'p3_d3', text: "Terapia física (Movimiento suave)", type: "activity" },
-                    { id: 'p3_d4', text: "Cambio de posición (Cada 3 horas)", type: "check" }
-                ],
-                noche: [
-                    { id: 'p3_n1', text: "Analgésico Nocturno", type: "med" },
-                    { id: 'p3_n2', text: "Cambio de posición (Lado Izquierdo)", type: "check" },
-                    { id: 'p3_n3', text: "Cambio de posición (Boca arriba)", type: "check" },
-                    { id: 'p3_n4', text: "Revisar orina en bolsa recolectora", type: "check" }
-                ]
-                }
-            }
+            { id: 'p1', name: "Don Roberto", condition: "Diabetes T2 / Hipertensión", info: { address: "Calle Roble #123", emergency: "Hijo: Luis", age: "78", weight: "82kg", bloodType: "O+", allergies: "Penicilina", doctor: "Dr. Gtz", diet: "Diabética" }, tasks: { dia: [{id:'p1d1', text:'Glucosa', type:'vital'}, {id:'p1d2', text:'Desayuno', type:'food'}], noche: [{id:'p1n1', text:'Cena', type:'food'}, {id:'p1n2', text:'Glucosa', type:'vital'}] } },
+            { id: 'p2', name: "Sra. Elena", condition: "Post-Op Cadera", info: { address: "Av. Morelos #45", emergency: "Hija: Clara", age: "84", weight: "60kg", bloodType: "A-", allergies: "Ninguna", doctor: "Dra. Salas", diet: "Alta fibra" }, tasks: { dia: [{id:'p2d1', text:'Nebulización', type:'med'}, {id:'p2d2', text:'Curación', type:'cure'}], noche: [{id:'p2n1', text:'Oxígeno', type:'med'}] } },
+            { id: 'p3', name: "Don Jorge", condition: "Parkinson", info: { address: "Calle Madero #88", emergency: "Esposa: Rosa", age: "75", weight: "70kg", bloodType: "B+", allergies: "Sulfa", doctor: "Dr. Neuro", diet: "Papilla" }, tasks: { dia: [{id:'p3d1', text:'Levodopa', type:'med'}], noche: [{id:'p3n1', text:'Levodopa', type:'med'}] } },
+            { id: 'p4', name: "Sra. Margarita", condition: "Alzheimer", info: { address: "Portal Zauco #12", emergency: "Hijo: Pedro", age: "81", weight: "55kg", bloodType: "O-", allergies: "Polen", doctor: "Dr. Psique", diet: "Normal" }, tasks: { dia: [{id:'p4d1', text:'Memantina', type:'med'}], noche: [{id:'p4n1', text:'Quetiapina', type:'med'}] } },
+            { id: 'p5', name: "Don Felipe", condition: "EVC / Hemiplejia", info: { address: "16 de Septiembre", emergency: "Nieta: Ana", age: "69", weight: "75kg", bloodType: "A+", allergies: "Aspirina", doctor: "Dr. Vascular", diet: "Blanda" }, tasks: { dia: [{id:'p5d1', text:'Movilización', type:'physio'}], noche: [{id:'p5n1', text:'Cambio Pañal', type:'hygiene'}] } },
+            { id: 'p6', name: "Sra. Carmen", condition: "Artritis Reumatoide", info: { address: "Col. La Joya", emergency: "Hija: Sofia", age: "72", weight: "65kg", bloodType: "B-", allergies: "Ninguna", doctor: "Dr. Reuma", diet: "Antiinflamatoria" }, tasks: { dia: [{id:'p6d1', text:'Prednisona', type:'med'}], noche: [{id:'p6n1', text:'Tramadol', type:'med'}] } },
+            { id: 'p7', name: "Don Luis", condition: "Renal (Diálisis)", info: { address: "Pípila #8", emergency: "Hermano: Juan", age: "65", weight: "68kg", bloodType: "AB+", allergies: "Yodo", doctor: "Dr. Nefro", diet: "Renal" }, tasks: { dia: [{id:'p7d1', text:'Diálisis', type:'cure'}], noche: [{id:'p7n1', text:'Diálisis', type:'cure'}] } },
+            { id: 'p8', name: "Sra. Rosa", condition: "Insuficiencia Cardíaca", info: { address: "Las Flores #100", emergency: "Vecina: Lupe", age: "79", weight: "58kg", bloodType: "O+", allergies: "Látex", doctor: "Dr. Cardio", diet: "Sin sal" }, tasks: { dia: [{id:'p8d1', text:'Furosemida', type:'med'}], noche: [{id:'p8n1', text:'Fowler', type:'physio'}] } },
+            { id: 'p9', name: "Don Antonio", condition: "EPOC", info: { address: "Hidalgo #33", emergency: "Hijo: Toño", age: "82", weight: "62kg", bloodType: "A+", allergies: "Polvo", doctor: "Dr. Neumo", diet: "Fraccionada" }, tasks: { dia: [{id:'p9d1', text:'Inhaladores', type:'med'}], noche: [{id:'p9n1', text:'Nebulización', type:'med'}] } },
+            { id: 'p10', name: "Sra. Teresa", condition: "Demencia", info: { address: "Privada del Sol", emergency: "Hija: Maria", age: "88", weight: "48kg", bloodType: "O-", allergies: "Ninguna", doctor: "Dr. Geria", diet: "Alta calórica" }, tasks: { dia: [{id:'p10d1', text:'Caminata', type:'physio'}], noche: [{id:'p10n1', text:'Barandales', type:'check'}] } },
+            { id: 'p11', name: "Don Miguel", condition: "Ceguera / Diabetes", info: { address: "5 de Mayo", emergency: "Esposa: Laura", age: "70", weight: "85kg", bloodType: "B+", allergies: "Mariscos", doctor: "Dr. Oftalmo", diet: "Diabética" }, tasks: { dia: [{id:'p11d1', text:'Insulina', type:'med'}], noche: [{id:'p11n1', text:'Glucosa', type:'vital'}] } },
+            { id: 'p12', name: "Sra. Lupita", condition: "Postración", info: { address: "Calle Obregón", emergency: "Hijo: Beto", age: "90", weight: "45kg", bloodType: "A-", allergies: "Adhesivo", doctor: "Dr. Heridas", diet: "Sonda" }, tasks: { dia: [{id:'p12d1', text:'Sonda', type:'food'}], noche: [{id:'p12n1', text:'Movilización', type:'physio'}] } }
         ];
 
-        // --- COMPONENTE PRINCIPAL ---
-        function App() {
-            const [caregiver, setCaregiver] = React.useState("");
-            const [shift, setShift] = React.useState("");
-            const [patientId, setPatientId] = React.useState("");
-            const [records, setRecords] = React.useState({});
+        // Icons
+        const Icons = {
+            Lock: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>,
+            User: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>,
+            Calendar: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>,
+            Save: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+        };
 
-            React.useEffect(() => {
-                const saved = localStorage.getItem('careApp_data');
-                if (saved) {
-                    const parsed = JSON.parse(saved);
-                    setCaregiver(parsed.caregiver || "");
-                    setShift(parsed.shift || "");
-                    setPatientId(parsed.patientId || "");
-                    setRecords(parsed.records || {});
-                }
-            }, []);
+        // ---------------------------------------------------------
+        // 3. UTILIDADES DE FECHA Y VALIDACIÓN
+        // ---------------------------------------------------------
+        const getTodayStr = () => new Date().toISOString().split('T')[0];
+        
+        // Generar días para calendario (15 atrás, 15 adelante)
+        const getCalendarRange = () => {
+            const dates = [];
+            for (let i = -15; i <= 15; i++) {
+                const d = new Date();
+                d.setDate(d.getDate() + i);
+                dates.push(d.toISOString().split('T')[0]);
+            }
+            return dates;
+        };
 
-            React.useEffect(() => {
-                const dataToSave = { caregiver, shift, patientId, records };
-                localStorage.setItem('careApp_data', JSON.stringify(dataToSave));
-            }, [caregiver, shift, patientId, records]);
+        // Regla de las 2 horas: 
+        // Día (07:00-19:00) -> Editable hasta 21:00
+        // Noche (19:00-07:00) -> Editable hasta 09:00 del día siguiente (la lógica de día siguiente se simplifica aquí comparando timestamps)
+        const isEditable = (dateStr, shift) => {
+            const now = new Date();
+            const recordDate = new Date(dateStr + "T12:00:00"); // Asumir medio día para comparar fechas
+            const today = new Date(getTodayStr() + "T12:00:00");
 
-            const handleTaskCheck = (taskId) => {
-                const now = new Date();
-                const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
-                const dateString = now.toLocaleDateString([], {day: 'numeric', month: 'short'});
+            // Si es futuro: No editable (aún no pasa)
+            if (recordDate > today) return false;
+            
+            // Si es pasado (ayer o antes): No editable
+            if (recordDate < today) {
+                // Excepción: Si es turno de noche de ayer, y son antes de las 9am de hoy
+                const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+                const isYesterday = recordDate.toDateString() === yesterday.toDateString();
+                if (isYesterday && shift === 'noche' && now.getHours() < 9) return true;
+                return false;
+            }
 
-                setRecords(prev => {
-                    const current = prev[taskId] || {};
-                    if (current.checked) {
-                        return { ...prev, [taskId]: { ...current, checked: false, time: null } };
-                    } else {
-                        return { ...prev, [taskId]: { ...current, checked: true, time: `${dateString}, ${timeString}` } };
-                    }
-                });
+            // Si es hoy:
+            const currentHour = now.getHours();
+            if (shift === 'dia') {
+                // Editable si no han pasado las 21:00 (19:00 + 2h)
+                return currentHour < 21;
+            } else if (shift === 'noche') {
+                // Editable siempre hoy (porque acaba mañana)
+                return true;
+            }
+            return false;
+        };
+
+        // ---------------------------------------------------------
+        // 4. PANTALLAS
+        // ---------------------------------------------------------
+
+        function LoginScreen({ onLogin }) {
+            const [selectedUser, setSelectedUser] = React.useState("");
+            const [pin, setPin] = React.useState("");
+            const [error, setError] = React.useState("");
+            
+            const handleAttempt = (e) => {
+                e.preventDefault();
+                const user = STAFF.find(c => c.name === selectedUser);
+                if (user && user.pin === pin) onLogin(user);
+                else { setError("PIN Incorrecto"); setPin(""); }
             };
-
-            const handleTaskNote = (taskId, text) => {
-                setRecords(prev => ({
-                    ...prev,
-                    [taskId]: { ...(prev[taskId] || {}), note: text }
-                }));
-            };
-
-            const resetAll = () => {
-                if(window.confirm("¿Estás seguro de borrar todos los datos del turno actual?")) {
-                    setCaregiver("");
-                    setShift("");
-                    setPatientId("");
-                    setRecords({});
-                    localStorage.removeItem('careApp_data');
-                }
-            };
-
-            const generateWhatsAppLink = () => {
-                if (!caregiver || !shift || !patientId) {
-                    alert("Por favor completa la información básica antes de enviar.");
-                    return;
-                }
-
-                const patient = PATIENTS.find(p => p.id === patientId);
-                const taskList = patient.tasks[shift] || [];
-                
-                let message = `📋 *REPORTE DE CUIDADO DIARIO - MUVN*\n`;
-                message += `📅 *Fecha:* ${new Date().toLocaleDateString()}\n`;
-                message += `👤 *Cuidador:* ${caregiver}\n`;
-                message += `🌗 *Turno:* ${shift === 'dia' ? '☀️ Mañana/Tarde' : '🌙 Noche'}\n`;
-                message += `👴 *Paciente:* ${patient.name}\n\n`;
-                message += `✅ *ACTIVIDADES REALIZADAS:*\n`;
-                
-                let completedCount = 0;
-                taskList.forEach(task => {
-                    const rec = records[task.id];
-                    if (rec && rec.checked) {
-                        completedCount++;
-                        message += `🔹 *${task.text}*\n`;
-                        message += `   🕒 Hora: ${rec.time}\n`;
-                        if (rec.note) message += `   📝 Obs: ${rec.note}\n`;
-                    }
-                });
-
-                if (completedCount === 0) message += `   (Ninguna actividad registrada aún)\n`;
-
-                message += `\n⚠️ *PENDIENTES / NO REALIZADOS:*\n`;
-                taskList.forEach(task => {
-                    const rec = records[task.id];
-                    if (!rec || !rec.checked) {
-                        message += `🔸 ${task.text}`;
-                        if (rec && rec.note) message += ` (Obs: ${rec.note})`;
-                        message += `\n`;
-                    }
-                });
-
-                const encodedMsg = encodeURIComponent(message);
-                window.open(`https://wa.me/524451586270?text=${encodedMsg}`, '_blank');
-            };
-
-            const currentPatient = PATIENTS.find(p => p.id === patientId);
-            const currentTasks = (currentPatient && shift) ? currentPatient.tasks[shift] : [];
 
             return (
-                <div className="max-w-3xl mx-auto">
-                    {/* HEADER */}
-                    <header className="bg-sky-600 text-white p-4 shadow-md sticky top-0 z-10 rounded-b-xl">
-                        <div className="flex justify-between items-center">
-                            <div>
-                                <h1 className="text-xl font-bold flex items-center gap-2">
-                                    <Icons.Activity />
-                                    MUVN
-                                </h1>
-                                <p className="text-xs text-sky-100 font-medium">Registro de Cuidados</p>
-                            </div>
-                            <button 
-                                onClick={resetAll}
-                                className="bg-rose-500 hover:bg-rose-600 text-white p-2 rounded-lg text-xs flex items-center gap-1 transition-colors shadow-sm"
-                            >
-                                <Icons.Trash2 />
-                                Reiniciar
-                            </button>
+                <div className="flex flex-col items-center justify-center min-h-screen px-4 bg-slate-900">
+                    <div className="bg-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-sm text-center border border-slate-700 mx-auto">
+                        <div className="mx-auto w-32 h-32 rounded-full flex items-center justify-center mb-6 overflow-hidden bg-[#0E0E0E] p-1 border-4 border-[#0AB2BB]">
+                            <img src="https://raw.githubusercontent.com/jesusvn1993mplvt3-ai/MUVN-JMVN/main/LOGO%20MUVN.jpg" alt="Logo" className="w-full h-full object-contain" />
                         </div>
+                        <h2 className="text-2xl font-bold text-white mb-1">MUVN 2.0</h2>
+                        <p className="text-sm text-slate-400 mb-8">Administración y Cuidados</p>
+                        <form onSubmit={handleAttempt} className="space-y-6">
+                            <div className="text-left">
+                                <label className="block text-xs font-bold text-slate-300 uppercase mb-2 ml-1">Usuario</label>
+                                <select className="custom-input text-sm" value={selectedUser} onChange={(e) => setSelectedUser(e.target.value)}>
+                                    <option value="">-- Seleccionar --</option>
+                                    {STAFF.map(c => <option key={c.pin} value={c.name}>{c.name}</option>)}
+                                </select>
+                            </div>
+                            {selectedUser && (
+                                <div className="text-left fade-in">
+                                    <label className="block text-xs font-bold text-slate-300 uppercase mb-2 ml-1">PIN</label>
+                                    <div className="relative">
+                                        <div className="absolute left-3 top-3 text-gray-400"><Icons.Lock /></div>
+                                        <input type="password" maxLength="4" className="custom-input pl-10 text-center text-xl font-bold tracking-widest" value={pin} onChange={(e) => setPin(e.target.value)} placeholder="••••"/>
+                                    </div>
+                                    {error && <p className="text-red-400 text-xs mt-2 text-center font-bold">{error}</p>}
+                                </div>
+                            )}
+                            <button disabled={!selectedUser || pin.length < 4} className="w-full bg-[#0AB2BB] hover:bg-[#089aa1] text-white font-bold py-4 rounded-xl shadow-lg disabled:opacity-50 transition-all mt-4">Ingresar</button>
+                        </form>
+                    </div>
+                </div>
+            );
+        }
+
+        // --- PANTALLA DE ADMINISTRADOR: GESTIÓN DE TURNOS ---
+        function AdminPanel({ user, onLogout }) {
+            const [selectedDate, setSelectedDate] = React.useState(getTodayStr());
+            const [assignments, setAssignments] = React.useState({});
+            const [status, setStatus] = React.useState("idle");
+
+            // Cargar asignaciones de la fecha seleccionada
+            React.useEffect(() => {
+                setStatus("loading");
+                const unsubscribe = db.collection("asignaciones").doc(selectedDate)
+                    .onSnapshot(doc => {
+                        if(doc.exists) setAssignments(doc.data());
+                        else setAssignments({});
+                        setStatus("idle");
+                    });
+                return () => unsubscribe();
+            }, [selectedDate]);
+
+            const handleAssign = async (caregiverName, patientId, shift) => {
+                const newAssignments = { ...assignments, [caregiverName]: { patientId, shift } };
+                // Si seleccionan "Descanso", borramos la asignación
+                if (patientId === "off") delete newAssignments[caregiverName];
+                
+                // Guardar en Firestore
+                await db.collection("asignaciones").doc(selectedDate).set(newAssignments);
+            };
+
+            return (
+                <div className="min-h-screen bg-slate-900 pb-20">
+                    <header className="bg-slate-800 p-4 border-b border-slate-700 flex justify-between items-center sticky top-0 z-10">
+                        <h1 className="text-white font-bold text-lg"><span className="text-[#0AB2BB]">MUVN</span> Admin</h1>
+                        <button onClick={onLogout} className="text-slate-400 hover:text-white text-sm">Salir</button>
                     </header>
 
-                    {/* MENSAJE MOTIVACIONAL INTERNO */}
-                    <div className="mx-4 mt-4 bg-white p-3 rounded-lg border border-sky-100 shadow-sm flex items-center gap-3">
-                         <div className="p-2 bg-sky-100 rounded-full text-sky-600">
-                            <Icons.Heart />
-                         </div>
-                         <div>
-                            <p className="text-sm text-gray-700 italic">"Cuidar con el corazón hace la diferencia."</p>
-                            <p className="text-xs text-gray-500 font-semibold">Gracias por tu dedicación diaria.</p>
-                         </div>
+                    <div className="p-4 max-w-4xl mx-auto">
+                        <div className="bg-slate-800 p-4 rounded-xl mb-6 border border-slate-700">
+                            <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Fecha a Gestionar</label>
+                            <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="custom-input bg-white text-center font-bold text-lg"/>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {STAFF.filter(u => u.role === 'caregiver').map(caregiver => {
+                                const assignment = assignments[caregiver.name] || { patientId: "", shift: "" };
+                                
+                                return (
+                                    <div key={caregiver.pin} className="bg-slate-800 p-4 rounded-xl border border-slate-700 flex flex-col gap-3">
+                                        <div className="flex items-center gap-2 border-b border-slate-700 pb-2">
+                                            <div className="bg-[#0AB2BB] w-8 h-8 rounded-full flex items-center justify-center font-bold text-white">
+                                                {caregiver.name.charAt(0)}
+                                            </div>
+                                            <span className="font-bold text-white text-sm">{caregiver.name}</span>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <div>
+                                                <label className="text-[10px] text-slate-400 uppercase">Paciente</label>
+                                                <select 
+                                                    className="w-full bg-slate-700 text-white p-2 rounded text-sm outline-none focus:ring-1 focus:ring-[#0AB2BB]"
+                                                    value={assignment.patientId || ""}
+                                                    onChange={(e) => handleAssign(caregiver.name, e.target.value, assignment.shift || 'dia')}
+                                                >
+                                                    <option value="">-- Sin Asignar --</option>
+                                                    <option value="off">💤 DESCANSO</option>
+                                                    {PATIENTS.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] text-slate-400 uppercase">Turno</label>
+                                                <select 
+                                                    className="w-full bg-slate-700 text-white p-2 rounded text-sm outline-none focus:ring-1 focus:ring-[#0AB2BB]"
+                                                    value={assignment.shift || ""}
+                                                    onChange={(e) => handleAssign(caregiver.name, assignment.patientId, e.target.value)}
+                                                    disabled={!assignment.patientId || assignment.patientId === 'off'}
+                                                >
+                                                    <option value="dia">☀️ Día</option>
+                                                    <option value="noche">🌙 Noche</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
                     </div>
+                </div>
+            );
+        }
 
-                    <main className="p-4 space-y-6">
+        // --- PANTALLA DE CUIDADOR: CALENDARIO ---
+        function CaregiverCalendar({ user, onLogout, onSelectShift }) {
+            const [dates, setDates] = React.useState(getCalendarRange());
+            const [myAssignments, setMyAssignments] = React.useState({});
+            const [loading, setLoading] = React.useState(true);
 
-                        {/* 1. SELECCIÓN DE CUIDADOR */}
-                        <section className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                            <label className="block text-sm font-semibold text-gray-600 mb-2 flex items-center gap-2">
-                                <Icons.User />
-                                Selecciona Cuidador
-                            </label>
-                            <select 
-                                value={caregiver} 
-                                onChange={(e) => setCaregiver(e.target.value)}
-                                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-lg focus:ring-2 focus:ring-sky-500 outline-none"
-                            >
-                                <option value="">-- Elige tu nombre --</option>
-                                {CAREGIVERS.map(c => <option key={c} value={c}>{c}</option>)}
-                            </select>
-                        </section>
+            React.useEffect(() => {
+                // Cargar asignaciones para este cuidador en el rango de fechas
+                // Nota: Por simplicidad, leeremos día a día en un loop o cargaremos todo un mes si la estructura lo permite.
+                // Para optimizar, aquí leeremos "on demand" al renderizar, pero lo ideal es una query compuesta.
+                // Como Firestore client-side es rápido con cache, haremos listeners por fecha visible o una query de rango si creamos un campo 'date'.
+                // *Estrategia simple:* Cargar la colección 'asignaciones' (los documentos son fechas YYYY-MM-DD).
+                
+                const unsubscribe = db.collection("asignaciones")
+                    .where(firebase.firestore.FieldPath.documentId(), '>=', dates[0])
+                    .where(firebase.firestore.FieldPath.documentId(), '<=', dates[dates.length-1])
+                    .onSnapshot(snapshot => {
+                        const data = {};
+                        snapshot.docs.forEach(doc => {
+                            const dayAssignments = doc.data();
+                            if (dayAssignments[user.name]) {
+                                data[doc.id] = dayAssignments[user.name];
+                            }
+                        });
+                        setMyAssignments(data);
+                        setLoading(false);
+                    });
+                    
+                return () => unsubscribe();
+            }, []);
 
-                        {/* 2. SELECCIÓN DE TURNO */}
-                        <section className="grid grid-cols-2 gap-4">
-                            <button 
-                                onClick={() => setShift('dia')}
-                                className={`p-4 rounded-xl border-2 flex flex-col items-center justify-center gap-2 transition-all ${shift === 'dia' ? 'border-amber-400 bg-amber-50 text-amber-700' : 'border-gray-200 bg-white text-gray-400'}`}
-                            >
-                                <div className={shift === 'dia' ? 'text-amber-500' : ''}>
-                                    <Icons.Sun />
-                                </div>
-                                <span className="font-bold">Turno Día</span>
-                            </button>
-                            <button 
-                                onClick={() => setShift('noche')}
-                                className={`p-4 rounded-xl border-2 flex flex-col items-center justify-center gap-2 transition-all ${shift === 'noche' ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-gray-200 bg-white text-gray-400'}`}
-                            >
-                                <div className={shift === 'noche' ? 'text-indigo-600' : ''}>
-                                    <Icons.Moon />
-                                </div>
-                                <span className="font-bold">Turno Noche</span>
-                            </button>
-                        </section>
+            const handleDateClick = (date, assignment) => {
+                if (!assignment) return;
+                onSelectShift(date, assignment);
+            };
 
-                        {/* 3. SELECCIÓN DE PACIENTE */}
-                        <section className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                           <label className="block text-sm font-semibold text-gray-600 mb-2 flex items-center gap-2">
-                                <Icons.ClipboardList />
-                                Selecciona Paciente
-                            </label>
-                            <div className="space-y-2">
-                                {PATIENTS.map(p => (
-                                <button
-                                    key={p.id}
-                                    onClick={() => setPatientId(p.id)}
-                                    className={`w-full text-left p-3 rounded-lg border transition-all ${patientId === p.id ? 'border-sky-500 bg-sky-50 ring-1 ring-sky-500' : 'border-gray-200 hover:bg-gray-50'}`}
-                                >
-                                    <div className="font-bold text-gray-800">{p.name}</div>
-                                    {patientId === p.id && (
-                                    <div className="text-xs text-sky-600 mt-1">{p.details}</div>
-                                    )}
-                                </button>
-                                ))}
-                            </div>
-                        </section>
+            return (
+                <div className="min-h-screen bg-slate-900 pb-10">
+                    <header className="bg-slate-800 p-4 border-b border-slate-700 flex justify-between items-center sticky top-0 z-10 shadow-md">
+                        <div>
+                            <h1 className="text-white font-bold">Hola, {user.name.split(' ')[0]}</h1>
+                            <p className="text-xs text-slate-400">Tu Calendario de Turnos</p>
+                        </div>
+                        <button onClick={onLogout} className="p-2 bg-slate-700 rounded-full text-white"><Icons.User/></button>
+                    </header>
 
-                        {/* 4. LISTA DE TAREAS DINÁMICAS */}
-                        {caregiver && shift && patientId && (
-                            <section className="space-y-4 animate-fade-in">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <h2 className="text-lg font-bold text-gray-800">
-                                        Lista de Obligaciones ({shift === 'dia' ? 'Día' : 'Noche'})
-                                    </h2>
-                                    <span className="bg-sky-100 text-sky-800 text-xs px-2 py-1 rounded-full font-medium">
-                                        {currentTasks.length} Tareas
-                                    </span>
-                                </div>
-
-                                {currentTasks.map((task) => {
-                                    const record = records[task.id] || {};
-                                    const isChecked = record.checked || false;
-
-                                    let borderClass = "border-gray-200";
-                                    if (task.type === 'med') borderClass = "border-l-4 border-l-rose-400";
-                                    if (task.type === 'vital') borderClass = "border-l-4 border-l-emerald-400";
-                                    if (task.type === 'check') borderClass = "border-l-4 border-l-purple-400";
-                                    if (task.type === 'env') borderClass = "border-l-4 border-l-sky-400";
+                    <div className="p-4">
+                        {loading ? <p className="text-center text-[#0AB2BB] mt-10">Cargando agenda...</p> : (
+                            <div className="space-y-3">
+                                {dates.map(date => {
+                                    const assignment = myAssignments[date];
+                                    const isToday = date === getTodayStr();
+                                    const patient = assignment ? PATIENTS.find(p => p.id === assignment.patientId) : null;
+                                    
+                                    // Estado visual
+                                    let cardClass = "bg-slate-800 border-slate-700 opacity-50"; // Por defecto deshabilitado/vacío
+                                    if (assignment) {
+                                        if (isToday) cardClass = "bg-[#0AB2BB] border-[#0AB2BB] text-white shadow-lg scale-[1.02]";
+                                        else cardClass = "bg-slate-800 border-slate-600 text-slate-300 hover:border-[#0AB2BB]";
+                                    }
 
                                     return (
-                                        <div key={task.id} className={`bg-white rounded-lg shadow-sm border p-4 ${borderClass} transition-all ${isChecked ? 'bg-gray-50' : ''}`}>
-                                            <div className="flex items-start gap-3">
-                                                <button
-                                                    onClick={() => handleTaskCheck(task.id)}
-                                                    className={`mt-1 flex-shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all ${isChecked ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-gray-300 text-transparent hover:border-emerald-400'}`}
-                                                >
-                                                    <Icons.CheckCircle className={isChecked ? "opacity-100" : "opacity-0"} />
-                                                </button>
-                                                
-                                                <div className="flex-1">
-                                                    <h3 className={`font-medium text-gray-800 text-lg leading-tight ${isChecked ? 'line-through text-gray-400' : ''}`}>
-                                                        {task.text}
-                                                    </h3>
-                                                    
-                                                    {task.note && (
-                                                        <div className="mt-1 flex items-start gap-1 text-sm text-amber-600 bg-amber-50 p-2 rounded">
-                                                            <div className="mt-0.5"><Icons.AlertCircle /></div>
-                                                            <span>{task.note}</span>
-                                                        </div>
-                                                    )}
-
-                                                    {isChecked && record.time && (
-                                                        <div className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-1 rounded">
-                                                            <Icons.Clock />
-                                                            Completado: {record.time}
-                                                        </div>
-                                                    )}
-                                                </div>
+                                        <div 
+                                            key={date} 
+                                            onClick={() => handleDateClick(date, assignment)}
+                                            className={`p-4 rounded-xl border flex items-center justify-between transition-all ${cardClass} ${!assignment ? 'cursor-default' : 'cursor-pointer'}`}
+                                        >
+                                            <div className="flex flex-col items-center justify-center w-12 border-r border-white/10 pr-4 mr-4">
+                                                <span className="text-xs uppercase font-bold opacity-70">{new Date(date).toLocaleDateString('es-ES', {weekday: 'short'})}</span>
+                                                <span className="text-xl font-bold">{date.split('-')[2]}</span>
                                             </div>
-
-                                            <div className="mt-3 pl-11">
-                                                <textarea
-                                                    placeholder="Observaciones..."
-                                                    value={record.note || ""}
-                                                    onChange={(e) => handleTaskNote(task.id, e.target.value)}
-                                                    className="w-full text-sm p-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-sky-400 outline-none resize-none bg-gray-50 focus:bg-white"
-                                                    rows={2}
-                                                />
+                                            
+                                            <div className="flex-1">
+                                                {assignment ? (
+                                                    <>
+                                                        <div className="font-bold text-lg">{patient ? patient.name : 'Paciente desconocido'}</div>
+                                                        <div className="text-sm opacity-90 flex items-center gap-2">
+                                                            <span>{assignment.shift === 'dia' ? '☀️ Turno Día' : '🌙 Turno Noche'}</span>
+                                                        </div>
+                                                    </>
+                                                ) : (
+                                                    <span className="text-sm italic opacity-50">Sin asignación / Descanso</span>
+                                                )}
                                             </div>
+                                            
+                                            {assignment && <div className="text-2xl opacity-50">➜</div>}
                                         </div>
                                     );
                                 })}
-                            </section>
+                            </div>
                         )}
+                    </div>
+                </div>
+            );
+        }
 
-                    </main>
+        // --- PANTALLA DE REGISTRO (LOGBOOK) ---
+        function DailyLog({ user, date, assignment, onBack }) {
+            const [records, setRecords] = React.useState({});
+            const [obs, setObs] = React.useState("");
+            const [saving, setSaving] = React.useState(false);
 
-                    {/* FOOTER */}
-                    {caregiver && shift && patientId && (
-                        <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 p-4 shadow-lg z-20">
-                            <div className="max-w-3xl mx-auto">
-                                <button
-                                    onClick={generateWhatsAppLink}
-                                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-xl shadow-md flex items-center justify-center gap-2 text-lg transition-transform active:scale-95"
-                                >
-                                    <Icons.Send />
-                                    Enviar Reporte
-                                </button>
+            const patient = PATIENTS.find(p => p.id === assignment.patientId);
+            const canEdit = isEditable(date, assignment.shift);
+            const docId = `${date}_${assignment.shift}_${assignment.patientId}`;
+
+            // Cargar datos reales
+            React.useEffect(() => {
+                const unsubscribe = db.collection("registros_diarios").doc(docId).onSnapshot(doc => {
+                    if (doc.exists) {
+                        setRecords(doc.data().records || {});
+                        setObs(doc.data().generalObservation || "");
+                    }
+                });
+                return () => unsubscribe();
+            }, [docId]);
+
+            const handleToggle = async (taskId) => {
+                if (!canEdit) return;
+                const now = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                const current = records[taskId] || {};
+                const newRec = { ...records, [taskId]: { ...current, checked: !current.checked, completedAt: !current.checked ? now : null } };
+                
+                // Optimistic update
+                setRecords(newRec); 
+                
+                await db.collection("registros_diarios").doc(docId).set({
+                    date, shift: assignment.shift, patientId: assignment.patientId, caregiver: user.name,
+                    lastUpdate: firebase.firestore.Timestamp.now(),
+                    records: newRec, generalObservation: obs
+                }, { merge: true });
+            };
+
+            const handleObs = async (val) => {
+                if(!canEdit) return;
+                setObs(val); // Local update
+            };
+            const saveObs = async () => {
+                if(!canEdit) return;
+                setSaving(true);
+                await db.collection("registros_diarios").doc(docId).set({ generalObservation: obs }, { merge: true });
+                setSaving(false);
+            };
+
+            if (!patient) return <div className="p-10 text-white">Error: Paciente no encontrado</div>;
+
+            return (
+                <div className="min-h-screen bg-slate-900 pb-20">
+                    <div className={`sticky top-0 z-20 p-4 flex justify-between items-center shadow-md ${canEdit ? 'bg-[#0AB2BB]' : 'bg-slate-700'}`}>
+                        <button onClick={onBack} className="text-white font-bold text-xl">←</button>
+                        <div className="text-center text-white">
+                            <h2 className="font-bold text-lg">{date}</h2>
+                            <p className="text-xs uppercase opacity-90">{assignment.shift} - {canEdit ? 'EDITANDO' : 'SOLO LECTURA'}</p>
+                        </div>
+                        <div className="w-8"></div> {/* Spacer */}
+                    </div>
+
+                    <div className="p-4 max-w-2xl mx-auto space-y-6">
+                        {/* Ficha Resumida */}
+                        <div className="bg-slate-800 p-4 rounded-xl border border-slate-700">
+                            <h3 className="text-[#0AB2BB] font-bold text-lg">{patient.name}</h3>
+                            <p className="text-slate-400 text-sm mb-2">{patient.condition}</p>
+                            <div className="bg-slate-900 p-2 rounded text-xs text-slate-300">
+                                📍 {patient.info.address} <br/>
+                                🚑 {patient.info.emergency}
                             </div>
                         </div>
-                    )}
+
+                        {/* Tareas */}
+                        <div>
+                            <h4 className="text-white font-bold mb-3 uppercase text-sm tracking-wider">Actividades</h4>
+                            <div className="space-y-3">
+                                {patient.tasks[assignment.shift].map(task => {
+                                    const rec = records[task.id] || {};
+                                    return (
+                                        <div key={task.id} 
+                                            onClick={() => handleToggle(task.id)}
+                                            className={`p-4 rounded-xl border flex items-center justify-between transition-all ${rec.checked ? 'bg-[#0AB2BB]/10 border-[#0AB2BB]' : 'bg-slate-800 border-slate-700'} ${canEdit ? 'cursor-pointer active:scale-95' : 'opacity-70'}`}
+                                        >
+                                            <div>
+                                                <div className={`font-medium ${rec.checked ? 'text-[#0AB2BB] line-through' : 'text-white'}`}>{task.text}</div>
+                                                {rec.checked && <div className="text-xs text-[#0AB2BB] font-bold">Completado: {rec.completedAt}</div>}
+                                            </div>
+                                            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${rec.checked ? 'bg-[#0AB2BB] border-[#0AB2BB]' : 'border-slate-500'}`}>
+                                                {rec.checked && <span className="text-white text-xs">✓</span>}
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        </div>
+
+                        {/* Observaciones */}
+                        <div>
+                            <h4 className="text-white font-bold mb-3 uppercase text-sm tracking-wider">Bitácora</h4>
+                            <textarea 
+                                className={`w-full bg-slate-800 border ${canEdit ? 'border-slate-600 focus:border-[#0AB2BB]' : 'border-slate-800'} rounded-xl p-3 text-white outline-none h-32`}
+                                placeholder={canEdit ? "Escribe novedades del turno..." : "Sin observaciones"}
+                                value={obs}
+                                onChange={(e) => handleObs(e.target.value)}
+                                onBlur={saveObs}
+                                readOnly={!canEdit}
+                            ></textarea>
+                            {saving && <span className="text-xs text-[#0AB2BB] animate-pulse">Guardando...</span>}
+                        </div>
+                    </div>
                 </div>
+            );
+        }
+
+        // --- APP PRINCIPAL ---
+        function App() {
+            const [user, setUser] = React.useState(null); // { name, role, ... }
+            const [view, setView] = React.useState("login"); // login, admin, calendar, log
+            const [currentShiftData, setCurrentShiftData] = React.useState(null); // { date, assignment }
+
+            const handleLogin = (u) => {
+                setUser(u);
+                if (u.role === 'admin') setView("admin");
+                else setView("calendar");
+            };
+
+            const handleLogout = () => {
+                setUser(null);
+                setView("login");
+                setCurrentShiftData(null);
+            };
+
+            const handleSelectShift = (date, assignment) => {
+                setCurrentShiftData({ date, assignment });
+                setView("log");
+            };
+
+            return (
+                <>
+                    {view === "login" && <LoginScreen onLogin={handleLogin} />}
+                    {view === "admin" && <AdminPanel user={user} onLogout={handleLogout} />}
+                    {view === "calendar" && <CaregiverCalendar user={user} onLogout={handleLogout} onSelectShift={handleSelectShift} />}
+                    {view === "log" && <DailyLog user={user} date={currentShiftData.date} assignment={currentShiftData.assignment} onBack={() => setView("calendar")} />}
+                </>
             );
         }
 
@@ -416,5 +542,3 @@
     </script>
 </body>
 </html>
-
-
